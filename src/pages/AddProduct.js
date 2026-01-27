@@ -1,7 +1,11 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import './AddProduct.css'
 import { useLoading } from './LoadingContext'
-import { apiGet, apiUpload, apiPost } from './api'
+
+const API_BASE = (process.env.REACT_APP_API_BASE || 'https://sri-swarnakranthi-enterprises-backe.vercel.app').replace(
+  /\/+$/,
+  ''
+)
 
 const CATEGORIES = [
   'T-SHIRTS & CAPS',
@@ -36,15 +40,60 @@ const CATEGORIES = [
 
 const safeNum = (v) => {
   const n = parseFloat(v)
-  return Number.isFinite(n) ? n : ''
+  return Number.isFinite(n) ? n : null
 }
+
+const clamp = (n, min, max) => Math.min(max, Math.max(min, n))
+
+const slugify = (s) =>
+  String(s || '')
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
 
 const calcFinal = (price, disc) => {
   const p = safeNum(price)
-  const d = safeNum(disc)
-  if (p === '' || d === '') return ''
+  const dRaw = safeNum(disc)
+  if (p === null || dRaw === null) return ''
+  const d = clamp(dRaw, 0, 100)
   const final = p - (p * d) / 100
   return final < 0 ? '0.00' : final.toFixed(2)
+}
+
+const parseJsonSafe = async (res) => {
+  const text = await res.text()
+  try {
+    return text ? JSON.parse(text) : null
+  } catch {
+    return { message: text }
+  }
+}
+
+const apiGet = async (path) => {
+  const res = await fetch(`${API_BASE}${path}`)
+  const data = await parseJsonSafe(res)
+  if (!res.ok) throw Object.assign(new Error(data?.message || 'Request failed'), { payload: data })
+  return data
+}
+
+const apiPost = async (path, body) => {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+  const data = await parseJsonSafe(res)
+  if (!res.ok) throw Object.assign(new Error(data?.message || 'Request failed'), { payload: data })
+  return data
+}
+
+const apiUpload = async (path, formData) => {
+  const res = await fetch(`${API_BASE}${path}`, { method: 'POST', body: formData })
+  const data = await parseJsonSafe(res)
+  if (!res.ok) throw Object.assign(new Error(data?.message || 'Upload failed'), { payload: data })
+  return data
 }
 
 export default function AddProduct() {
@@ -67,9 +116,8 @@ export default function AddProduct() {
   const [productPopup, setProductPopup] = useState(false)
   const [newProduct, setNewProduct] = useState('')
 
-  const [b2bPrice, setB2bPrice] = useState('')
-  const [b2bDiscount, setB2bDiscount] = useState('')
-  const [b2bFinal, setB2bFinal] = useState('')
+  const [modelName, setModelName] = useState('')
+  const [description, setDescription] = useState('')
 
   const [b2cPrice, setB2cPrice] = useState('')
   const [b2cDiscount, setB2cDiscount] = useState('')
@@ -77,10 +125,14 @@ export default function AddProduct() {
 
   const [totalCount, setTotalCount] = useState('')
   const [images, setImages] = useState([])
-  const [submitting, setSubmitting] = useState(false)
+  const [published, setPublished] = useState(true)
 
+  const [submitting, setSubmitting] = useState(false)
   const [popupMessage, setPopupMessage] = useState('')
   const [popupType, setPopupType] = useState('')
+
+  const brandBoxRef = useRef(null)
+  const productBoxRef = useRef(null)
 
   useEffect(() => {
     async function loadOptions() {
@@ -91,8 +143,8 @@ export default function AddProduct() {
         const brandSet = new Set()
         const productSet = new Set()
         list.forEach((item) => {
-          if (item.brand) brandSet.add(item.brand)
-          if (item.product_name) productSet.add(item.product_name)
+          if (item?.brand) brandSet.add(String(item.brand))
+          if (item?.name) productSet.add(String(item.name))
         })
         setBrandList(Array.from(brandSet).sort())
         setProductList(Array.from(productSet).sort())
@@ -107,12 +159,19 @@ export default function AddProduct() {
   }, [])
 
   useEffect(() => {
-    setB2bFinal(calcFinal(b2bPrice, b2bDiscount))
-  }, [b2bPrice, b2bDiscount])
-
-  useEffect(() => {
     setB2cFinal(calcFinal(b2cPrice, b2cDiscount))
   }, [b2cPrice, b2cDiscount])
+
+  useEffect(() => {
+    const onDoc = (e) => {
+      const b = brandBoxRef.current
+      const p = productBoxRef.current
+      if (b && !b.contains(e.target)) setBrandDropdown(false)
+      if (p && !p.contains(e.target)) setProductDropdown(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [])
 
   const showToast = (msg, type = 'success') => {
     setPopupMessage(msg)
@@ -120,21 +179,23 @@ export default function AddProduct() {
     setTimeout(() => {
       setPopupMessage('')
       setPopupType('')
-    }, 2500)
+    }, 2400)
   }
 
   const resetForm = () => {
     setCategory('')
     setBrandInput('')
     setProductInput('')
-    setB2bPrice('')
-    setB2bDiscount('')
-    setB2bFinal('')
+    setModelName('')
+    setDescription('')
     setB2cPrice('')
     setB2cDiscount('')
     setB2cFinal('')
     setTotalCount('')
     setImages([])
+    setPublished(true)
+    setBrandDropdown(false)
+    setProductDropdown(false)
   }
 
   const handleBrandSearch = (e) => {
@@ -142,6 +203,7 @@ export default function AddProduct() {
     setBrandInput(value)
     if (!value) {
       setBrandDropdown(false)
+      setBrandFiltered([])
       return
     }
     const filtered = brandList.filter((b) => b.toLowerCase().includes(value.toLowerCase()))
@@ -154,6 +216,7 @@ export default function AddProduct() {
     setProductInput(value)
     if (!value) {
       setProductDropdown(false)
+      setProductFiltered([])
       return
     }
     const filtered = productList.filter((p) => p.toLowerCase().includes(value.toLowerCase()))
@@ -192,7 +255,8 @@ export default function AddProduct() {
         const formData = new FormData()
         formData.append('image', file)
         const res = await apiUpload('/api/upload', formData)
-        const url = res.imageUrl || res.url || res.path || ''
+        let url = res?.imageUrl || res?.url || res?.path || ''
+        url = typeof url === 'string' ? url.trim() : ''
         if (url) uploaded.push(url)
       }
       setImages((prev) => [...prev, ...uploaded].slice(0, 6))
@@ -200,39 +264,48 @@ export default function AddProduct() {
       showToast('Image upload failed', 'error')
     } finally {
       hide()
+      e.target.value = ''
     }
   }
 
   const removeImage = (url) => setImages((prev) => prev.filter((i) => i !== url))
 
   const payload = useMemo(() => {
+    const priceNum = safeNum(b2cPrice)
+    const discountedNum = safeNum(b2cFinal)
+    const stock = String(totalCount || '').trim()
+    const descLines = []
+    if (description.trim()) descLines.push(description.trim())
+    if (stock) descLines.push(`Stock: ${stock}`)
+    const finalDesc = descLines.length ? descLines.join('\n') : null
+
     return {
-      category: category.trim(),
-      brand: brandInput.trim(),
-      product_name: productInput.trim(),
-      b2b_actual_price: b2bPrice,
-      b2b_discount: b2bDiscount,
-      b2b_final_price: b2bFinal,
-      b2c_actual_price: b2cPrice,
-      b2c_discount: b2cDiscount,
-      b2c_final_price: b2cFinal,
-      count: totalCount,
-      images
+      name: productInput.trim(),
+      model_name: modelName.trim() ? modelName.trim() : null,
+      brand: brandInput.trim() ? brandInput.trim() : null,
+      category_slug: slugify(category) || null,
+      price: priceNum,
+      discounted_price: discountedNum,
+      description: finalDesc,
+      images,
+      published: !!published
     }
-  }, [category, brandInput, productInput, b2bPrice, b2bDiscount, b2bFinal, b2cPrice, b2cDiscount, b2cFinal, totalCount, images])
+  }, [productInput, modelName, brandInput, category, b2cPrice, b2cFinal, description, totalCount, images, published])
 
   const validate = () => {
-    if (!payload.category) return 'Please select category'
-    if (!payload.brand) return 'Please enter brand'
-    if (!payload.product_name) return 'Please enter product name'
-    if (!payload.b2b_actual_price) return 'Enter B2B actual price'
-    if (payload.b2b_discount === '') return 'Enter B2B discount'
-    if (!payload.b2b_final_price) return 'B2B final price is missing'
-    if (!payload.b2c_actual_price) return 'Enter B2C actual price'
-    if (payload.b2c_discount === '') return 'Enter B2C discount'
-    if (!payload.b2c_final_price) return 'B2C final price is missing'
-    if (!payload.count) return 'Enter product count'
-    if (!payload.images.length) return 'Upload at least one image'
+    const name = productInput.trim()
+    const cat = slugify(category)
+    const priceNum = safeNum(b2cPrice)
+    const discountNum = safeNum(b2cDiscount)
+    const finalNum = safeNum(b2cFinal)
+
+    if (!name) return 'Please enter product name'
+    if (!cat) return 'Please select category'
+    if (!brandInput.trim()) return 'Please enter brand'
+    if (priceNum === null || priceNum <= 0) return 'Enter valid price'
+    if (discountNum === null || discountNum < 0 || discountNum > 100) return 'Enter valid discount'
+    if (finalNum === null || finalNum <= 0) return 'Final price is missing'
+    if (!images.length) return 'Upload at least one image'
     return ''
   }
 
@@ -259,161 +332,199 @@ export default function AddProduct() {
   }
 
   return (
-    <div className="ap-wrap">
+    <div className="ap-page">
       <div className="ap-top">
-        <div>
-          <h1 className="ap-heading">Add Product</h1>
-          <p className="ap-desc">Fill all details and save product instantly</p>
+        <div className="ap-titlebar">
+          <div className="ap-title">Add Product</div>
+          <div className={`ap-status ${loadingOptions ? 'loading' : 'ready'}`}>{loadingOptions ? 'Loading…' : 'Ready'}</div>
         </div>
-        <div className="ap-status">{loadingOptions ? 'Loading...' : 'Ready'}</div>
       </div>
 
-      <div className="ap-section">
-        <h2 className="ap-title">Basic Information</h2>
-
-        <div className="ap-grid">
-          <div className="ap-field full">
-            <label>Category</label>
-            <select value={category} onChange={(e) => setCategory(e.target.value)}>
-              <option value="">Select Category</option>
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+      <div className="ap-layout">
+        <div className="ap-panel">
+          <div className="ap-panel-head">
+            <div className="ap-panel-title">Basic Details</div>
           </div>
 
-          <div className="ap-field">
-            <label>Brand</label>
-            <div className="ap-row">
-              <input value={brandInput} onChange={handleBrandSearch} placeholder="Type or search brand" />
-              <button type="button" onClick={() => setBrandPopup(true)}>
-                +
-              </button>
+          <div className="ap-grid">
+            <div className="ap-field full">
+              <label>Category</label>
+              <select value={category} onChange={(e) => setCategory(e.target.value)}>
+                <option value="">Select Category</option>
+                {CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            {brandDropdown && brandFiltered.length > 0 && (
-              <div className="ap-drop">
-                {brandFiltered.slice(0, 8).map((b) => (
-                  <div
-                    key={b}
-                    onClick={() => {
-                      setBrandInput(b)
-                      setBrandDropdown(false)
-                    }}
-                  >
-                    {b}
+            <div className="ap-field" ref={brandBoxRef}>
+              <label>Brand</label>
+              <div className="ap-input-row">
+                <input value={brandInput} onChange={handleBrandSearch} placeholder="Search or type brand" />
+                <button type="button" className="ap-mini" onClick={() => setBrandPopup(true)}>
+                  Add
+                </button>
+              </div>
+
+              {brandDropdown && brandFiltered.length > 0 && (
+                <div className="ap-dropdown">
+                  {brandFiltered.slice(0, 10).map((b) => (
+                    <button
+                      type="button"
+                      key={b}
+                      className="ap-dd-item"
+                      onClick={() => {
+                        setBrandInput(b)
+                        setBrandDropdown(false)
+                      }}
+                    >
+                      {b}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="ap-field" ref={productBoxRef}>
+              <label>Product Name</label>
+              <div className="ap-input-row">
+                <input value={productInput} onChange={handleProductSearch} placeholder="Search or type product" />
+                <button type="button" className="ap-mini" onClick={() => setProductPopup(true)}>
+                  Add
+                </button>
+              </div>
+
+              {productDropdown && productFiltered.length > 0 && (
+                <div className="ap-dropdown">
+                  {productFiltered.slice(0, 10).map((p) => (
+                    <button
+                      type="button"
+                      key={p}
+                      className="ap-dd-item"
+                      onClick={() => {
+                        setProductInput(p)
+                        setProductDropdown(false)
+                      }}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="ap-field full">
+              <label>Model Name</label>
+              <input value={modelName} onChange={(e) => setModelName(e.target.value)} placeholder="Optional model name" />
+            </div>
+
+            <div className="ap-field full">
+              <label>Description</label>
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional description" rows={4} />
+            </div>
+
+            <div className="ap-field">
+              <label>Stock</label>
+              <input type="number" value={totalCount} onChange={(e) => setTotalCount(e.target.value)} placeholder="Optional" />
+            </div>
+
+            <div className="ap-field">
+              <label>Published</label>
+              <select value={published ? 'true' : 'false'} onChange={(e) => setPublished(e.target.value === 'true')}>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="ap-right">
+          <div className="ap-panel">
+            <div className="ap-panel-head">
+              <div className="ap-panel-title">Pricing</div>
+            </div>
+
+            <div className="ap-grid ap-grid-1">
+              <div className="ap-field">
+                <label>Actual Price</label>
+                <input type="number" value={b2cPrice} onChange={(e) => setB2cPrice(e.target.value)} placeholder="0.00" />
+              </div>
+
+              <div className="ap-field">
+                <label>Discount %</label>
+                <input type="number" value={b2cDiscount} onChange={(e) => setB2cDiscount(e.target.value)} placeholder="0 - 100" />
+              </div>
+
+              <div className="ap-field">
+                <label>Discounted Price</label>
+                <input value={b2cFinal} readOnly placeholder="Auto calculated" />
+              </div>
+            </div>
+          </div>
+
+          <div className="ap-panel">
+            <div className="ap-panel-head">
+              <div className="ap-panel-title">Images</div>
+              <div className="ap-panel-sub">Up to 6 images</div>
+            </div>
+
+            <label className="ap-upload">
+              <div className="ap-upload-title">Choose images</div>
+              <div className="ap-upload-sub">PNG, JPG, WEBP (multiple allowed)</div>
+              <input type="file" accept="image/*" multiple onChange={handleMultiImageUpload} />
+            </label>
+
+            {images.length > 0 && (
+              <div className="ap-images">
+                {images.map((url) => (
+                  <div key={url} className="ap-img">
+                    <img src={url} alt="product" />
+                    <button type="button" className="ap-img-x" onClick={() => removeImage(url)}>
+                      Remove
+                    </button>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          <div className="ap-field">
-            <label>Product Name</label>
-            <div className="ap-row">
-              <input value={productInput} onChange={handleProductSearch} placeholder="Type or search product" />
-              <button type="button" onClick={() => setProductPopup(true)}>
-                +
-              </button>
-            </div>
-
-            {productDropdown && productFiltered.length > 0 && (
-              <div className="ap-drop">
-                {productFiltered.slice(0, 8).map((p) => (
-                  <div
-                    key={p}
-                    onClick={() => {
-                      setProductInput(p)
-                      setProductDropdown(false)
-                    }}
-                  >
-                    {p}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="ap-field full">
-            <label>Total Stock</label>
-            <input type="number" value={totalCount} onChange={(e) => setTotalCount(e.target.value)} placeholder="Enter stock count" />
-          </div>
+          <button className="ap-save" onClick={handleSubmit} disabled={submitting}>
+            {submitting ? 'Saving…' : 'Save Product'}
+          </button>
         </div>
       </div>
-
-      <div className="ap-section">
-        <h2 className="ap-title">Pricing</h2>
-
-        <div className="ap-price-grid">
-          <div className="ap-box">
-            <h3>B2B</h3>
-            <label>Actual Price</label>
-            <input type="number" value={b2bPrice} onChange={(e) => setB2bPrice(e.target.value)} />
-            <label>Discount %</label>
-            <input type="number" value={b2bDiscount} onChange={(e) => setB2bDiscount(e.target.value)} />
-            <label>Final Price</label>
-            <input value={b2bFinal} readOnly />
-          </div>
-
-          <div className="ap-box">
-            <h3>B2C</h3>
-            <label>Actual Price</label>
-            <input type="number" value={b2cPrice} onChange={(e) => setB2cPrice(e.target.value)} />
-            <label>Discount %</label>
-            <input type="number" value={b2cDiscount} onChange={(e) => setB2cDiscount(e.target.value)} />
-            <label>Final Price</label>
-            <input value={b2cFinal} readOnly />
-          </div>
-        </div>
-      </div>
-
-      <div className="ap-section">
-        <h2 className="ap-title">Images</h2>
-
-        <label className="ap-upload">
-          Upload Images
-          <input type="file" accept="image/*" multiple onChange={handleMultiImageUpload} />
-        </label>
-
-        <div className="ap-images">
-          {images.map((url) => (
-            <div key={url} className="ap-img">
-              <img src={url} alt="p" />
-              <button type="button" onClick={() => removeImage(url)}>
-                ✕
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <button className="ap-save" onClick={handleSubmit} disabled={submitting}>
-        {submitting ? 'Saving...' : 'Save Product'}
-      </button>
 
       {brandPopup && (
-        <div className="ap-modal">
+        <div className="ap-modal" role="dialog" aria-modal="true">
           <div className="ap-modal-box">
-            <h3>Add Brand</h3>
+            <div className="ap-modal-title">Add Brand</div>
             <input value={newBrand} onChange={(e) => setNewBrand(e.target.value)} placeholder="Brand name" />
             <div className="ap-modal-actions">
-              <button onClick={handleAddNewBrand}>Add</button>
-              <button onClick={() => setBrandPopup(false)}>Cancel</button>
+              <button type="button" className="ap-btn primary" onClick={handleAddNewBrand}>
+                Add
+              </button>
+              <button type="button" className="ap-btn" onClick={() => setBrandPopup(false)}>
+                Cancel
+              </button>
             </div>
           </div>
         </div>
       )}
 
       {productPopup && (
-        <div className="ap-modal">
+        <div className="ap-modal" role="dialog" aria-modal="true">
           <div className="ap-modal-box">
-            <h3>Add Product</h3>
+            <div className="ap-modal-title">Add Product</div>
             <input value={newProduct} onChange={(e) => setNewProduct(e.target.value)} placeholder="Product name" />
             <div className="ap-modal-actions">
-              <button onClick={handleAddNewProduct}>Add</button>
-              <button onClick={() => setProductPopup(false)}>Cancel</button>
+              <button type="button" className="ap-btn primary" onClick={handleAddNewProduct}>
+                Add
+              </button>
+              <button type="button" className="ap-btn" onClick={() => setProductPopup(false)}>
+                Cancel
+              </button>
             </div>
           </div>
         </div>

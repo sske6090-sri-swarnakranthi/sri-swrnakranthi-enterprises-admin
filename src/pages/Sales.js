@@ -3,12 +3,12 @@ import './Sales.css'
 import Navbar from './NavbarAdmin'
 import OrderDetailPopup from './OrderDetailPopup'
 
-const DEFAULT_API_BASE = 'http://localhost:5000'
+const DEFAULT_API_BASE = 'https://sri-swarnakranthi-enterprises-backe.vercel.app'
 const API_BASE_RAW =
   (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) ||
   (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_BASE) ||
   DEFAULT_API_BASE
-const API_BASE = String(API_BASE_RAW || '').replace(/\/+$/, '')
+const API_BASE = String(API_BASE_RAW || DEFAULT_API_BASE).replace(/\/+$/, '')
 
 const STATUSES = ['ALL', 'PLACED', 'CONFIRMED', 'PACKED', 'SHIPPED', 'DELIVERED', 'CANCELLED']
 const PAYMENT_FILTERS = ['ALL', 'COD', 'PREPAID', 'PENDING', 'FAILED']
@@ -41,9 +41,9 @@ function normalizeOrderStage(orderStatus) {
 }
 
 function isIncompleteOrder(o) {
-  const stage = normalizeOrderStage(o?.status)
+  const stage = normalizeOrderStage(o?.order_status || o?.status)
   const pay = normalizePayMode(o?.payment_status || o?.paymentStatus)
-  const payable = Number(o?.totals?.payable ?? o?.total ?? 0)
+  const payable = Number(o?.total_amount ?? o?.totals?.payable ?? o?.total ?? 0)
   const hasCustomer =
     (o?.customer_name && String(o.customer_name).trim()) ||
     (o?.customer_email && String(o.customer_email).trim()) ||
@@ -84,12 +84,60 @@ export default function Sales() {
   const [detail, setDetail] = useState(null)
   const [detailLoading, setDetailLoading] = useState(false)
 
+  const normalizeOrder = (o) => {
+    if (!o || typeof o !== 'object') return null
+    const id = o.id ?? o.order_id ?? o.orderId ?? null
+    if (!id) return null
+    const items = Array.isArray(o.items) ? o.items : []
+    const created_at = o.created_at ?? o.createdAt ?? o.created ?? null
+    const statusVal = o.order_status ?? o.status ?? 'PLACED'
+    const payStatus = o.payment_status ?? o.paymentStatus ?? o.payment_mode ?? o.paymentMode ?? 'PENDING'
+    const total_amount =
+      o.total_amount ??
+      o.totalAmount ??
+      o.totals?.payable ??
+      o.total ??
+      (items.length ? items.reduce((a, it) => a + Number(it.price || 0) * Number(it.qty || 0), 0) : 0)
+
+    return {
+      ...o,
+      id,
+      created_at,
+      status: statusVal,
+      order_status: statusVal,
+      payment_status: payStatus,
+      total_amount,
+      totals: { ...(o.totals || {}), payable: Number(total_amount || 0) },
+      items
+    }
+  }
+
   const fetchOrders = async () => {
     setLoading(true)
     try {
-      const res = await fetch(`${API_BASE}/api/orders/web/admin`, { cache: 'no-store' })
-      const data = await res.json().catch(() => [])
-      setOrders(Array.isArray(data) ? data : [])
+      const endpoints = [`${API_BASE}/api/orders/web/admin`, `${API_BASE}/api/orders/admin`, `${API_BASE}/api/orders`]
+      let data = null
+      for (const url of endpoints) {
+        try {
+          const res = await fetch(url, { cache: 'no-store' })
+          const json = await res.json().catch(() => null)
+          if (res.ok && json) {
+            data = json
+            break
+          }
+        } catch {}
+      }
+
+      const list = Array.isArray(data) ? data : Array.isArray(data?.orders) ? data.orders : Array.isArray(data?.data) ? data.data : []
+      const cleaned = list.map(normalizeOrder).filter(Boolean)
+
+      cleaned.sort((a, b) => {
+        const ta = a.created_at ? new Date(a.created_at).getTime() : 0
+        const tb = b.created_at ? new Date(b.created_at).getTime() : 0
+        return tb - ta
+      })
+
+      setOrders(cleaned)
     } catch {
       setOrders([])
     } finally {
@@ -102,6 +150,7 @@ export default function Sales() {
   }, [])
 
   const getPayable = (o) => {
+    if (o?.total_amount != null) return Number(o.total_amount)
     if (o?.totals?.payable != null) return Number(o.totals.payable)
     if (o?.total != null) return Number(o.total)
     if (Array.isArray(o?.items) && o.items.length) {
@@ -122,7 +171,7 @@ export default function Sales() {
     const toTs = to ? new Date(to + 'T23:59:59').getTime() : null
 
     return orders.filter((o) => {
-      const st = statusText(o?.status || 'PLACED')
+      const st = statusText(o?.order_status || o?.status || 'PLACED')
       const okStatus = status === 'ALL' ? true : st === status
 
       const payMode = normalizePayMode(o?.payment_status || o?.paymentStatus)
@@ -135,15 +184,16 @@ export default function Sales() {
       const okFrom = fromTs ? (created ? created >= fromTs : true) : true
       const okTo = toTs ? (created ? created <= toTs : true) : true
 
-      const t = o?.totals || {}
       const hay = [
         o?.id,
         getCustomerLabel(o),
         o?.customer_email,
         o?.customer_mobile,
+        o?.order_status,
         o?.status,
         o?.payment_status,
-        t?.payable,
+        o?.total_amount,
+        o?.totals?.payable,
         getPayable(o)
       ]
         .join(' ')
@@ -175,10 +225,11 @@ export default function Sales() {
       }
       const order = json.order || json.sale || json || null
       const items = Array.isArray(json.items) ? json.items : Array.isArray(order?.items) ? order.items : []
+      const normalized = normalizeOrder({ ...(order || {}), id: order?.id ?? id, items })
 
       setDetail({
-        sale: order || { id, status: 'PLACED', payment_status: 'COD', totals: { payable: 0 } },
-        items,
+        sale: normalized || { id, status: 'PLACED', payment_status: 'COD', totals: { payable: 0 } },
+        items: normalized?.items || items,
         shipments: [],
         trackingSnapshot: null,
         latestShipment: null
@@ -258,7 +309,7 @@ export default function Sales() {
                     const items = Array.isArray(o?.items) ? o.items : []
                     const title = firstName(items) || 'Order'
                     const img = firstImg(items)
-                    const st = statusText(o?.status || 'PLACED')
+                    const st = statusText(o?.order_status || o?.status || 'PLACED')
                     const payMode = normalizePayMode(o?.payment_status || o?.paymentStatus)
 
                     return (
@@ -314,7 +365,7 @@ export default function Sales() {
         detail={detail}
         onClose={() => setDetail(null)}
         apiBase={API_BASE}
-        orderSteps={['PLACED']}
+        orderSteps={['PLACED', 'CONFIRMED', 'PACKED', 'SHIPPED', 'DELIVERED']}
         statusText={statusText}
         computeStepFromLocal={() => 0}
         computeStepFromShiprocket={() => 0}

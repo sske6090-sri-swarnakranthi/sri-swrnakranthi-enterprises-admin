@@ -1,25 +1,30 @@
-const BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000'
+const BASE = (process.env.REACT_APP_API_BASE || 'http://localhost:5000').replace(/\/+$/, '')
+
+async function parseBody(res) {
+  const text = await res.text()
+  if (!text) return null
+  try {
+    return JSON.parse(text)
+  } catch {
+    return text
+  }
+}
 
 async function request(url, options = {}) {
+  const isForm = options.body instanceof FormData
+  const headers = { ...(options.headers || {}) }
+
+  if (!isForm) headers['Content-Type'] = 'application/json'
+
   const res = await fetch(`${BASE}${url}`, {
     ...options,
-    headers: {
-      ...(options.headers || {}),
-      'Content-Type': options.body instanceof FormData ? undefined : 'application/json'
-    }
+    headers
   })
 
-  const text = await res.text()
-  let payload = null
-
-  try {
-    payload = text ? JSON.parse(text) : null
-  } catch {
-    payload = text
-  }
+  const payload = await parseBody(res)
 
   if (!res.ok) {
-    const err = new Error(payload?.message || 'Request failed')
+    const err = new Error(payload?.message || payload?.error || 'Request failed')
     err.status = res.status
     err.payload = payload
     throw err
@@ -40,19 +45,8 @@ export async function apiPost(url, body) {
 }
 
 export async function apiUpload(url, formData) {
-  const res = await fetch(`${BASE}${url}`, {
+  return request(url, {
     method: 'POST',
     body: formData
   })
-
-  const payload = await res.json().catch(() => null)
-
-  if (!res.ok) {
-    const err = new Error(payload?.message || payload?.error || 'Upload failed')
-    err.status = res.status
-    err.payload = payload
-    throw err
-  }
-
-  return payload
 }

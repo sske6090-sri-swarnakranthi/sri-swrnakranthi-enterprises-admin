@@ -21,43 +21,42 @@ const HomePage = () => {
 
       <div className="hp-page">
         <header className="hp-hero">
-          <div className="hp-left">
-            <div className="hp-badge">Products</div>
-            <h1 className="hp-title">Manage Products</h1>
-            <p className="hp-sub">
-              Add new items, update existing inventory, or delete products safely.
-            </p>
-          </div>
+          <h1 className="hp-title">Manage Products</h1>
 
-          <div className="hp-tabs">
+          <div className="hp-tabs" role="tablist" aria-label="Product actions">
             <button
+              type="button"
               className={`hp-tab ${activeTab === 'Add' ? 'active' : ''}`}
               onClick={() => setActiveTab('Add')}
+              role="tab"
+              aria-selected={activeTab === 'Add'}
             >
-              Add Product
+              Add
             </button>
 
             <button
+              type="button"
               className={`hp-tab ${activeTab === 'Update' ? 'active' : ''}`}
               onClick={() => setActiveTab('Update')}
+              role="tab"
+              aria-selected={activeTab === 'Update'}
             >
-              Update Product
+              Update
             </button>
 
             <button
+              type="button"
               className={`hp-tab ${activeTab === 'Delete' ? 'active' : ''}`}
               onClick={() => setActiveTab('Delete')}
+              role="tab"
+              aria-selected={activeTab === 'Delete'}
             >
-              Delete Product
+              Delete
             </button>
 
             <div
               className={`hp-indicator ${
-                activeTab === 'Update'
-                  ? 'mid'
-                  : activeTab === 'Delete'
-                  ? 'right'
-                  : ''
+                activeTab === 'Update' ? 'mid' : activeTab === 'Delete' ? 'right' : ''
               }`}
             />
           </div>

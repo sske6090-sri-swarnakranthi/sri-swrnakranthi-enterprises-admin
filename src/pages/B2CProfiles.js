@@ -1,14 +1,13 @@
-// D:\gifts-admin\src\pages\B2CProfiles.js
 import React, { useEffect, useMemo, useState } from 'react'
 import './B2CProfiles.css'
 import { FiSearch, FiUsers } from 'react-icons/fi'
 
-const DEFAULT_API_BASE = 'http://localhost:5000'
+const DEFAULT_API_BASE = 'https://sri-swarnakranthi-enterprises-backe.vercel.app'
 const API_BASE_RAW =
   (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) ||
   (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_BASE) ||
   DEFAULT_API_BASE
-const API_BASE = API_BASE_RAW.replace(/\/+$/, '')
+const API_BASE = String(API_BASE_RAW || DEFAULT_API_BASE).replace(/\/+$/, '')
 
 const B2CProfiles = () => {
   const [b2cCustomers, setB2cCustomers] = useState([])
@@ -67,11 +66,7 @@ const B2CProfiles = () => {
           <div className="b2c-tools">
             <div className="b2c-search">
               <FiSearch />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search name, email, mobile..."
-              />
+              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search name, email, mobile..." />
             </div>
 
             <div className="b2c-count">
