@@ -28,8 +28,8 @@ const NavbarAdmin = () => {
 
   const navLinks = [
     { name: 'Products', path: '/' },
-    { name: 'Transactions', path: '/transactions' },
-    { name: 'Stocks', path: '/stocks' },
+    //{ name: 'Transactions', path: '/transactions' },
+    //{ name: 'Stocks', path: '/stocks' },
     { name: 'Sales', path: '/sales' },
     { name: 'Customers', path: '/customers' }
     /*{ name: 'POS', path: '/pos' },
