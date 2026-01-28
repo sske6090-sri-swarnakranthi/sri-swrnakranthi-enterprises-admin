@@ -127,6 +127,9 @@ export default function AddProduct() {
   const [images, setImages] = useState([])
   const [published, setPublished] = useState(true)
 
+  const [zipFile, setZipFile] = useState(null)
+  const [zipFileName, setZipFileName] = useState('')
+
   const [submitting, setSubmitting] = useState(false)
   const [popupMessage, setPopupMessage] = useState('')
   const [popupType, setPopupType] = useState('')
@@ -173,6 +176,19 @@ export default function AddProduct() {
     return () => document.removeEventListener('mousedown', onDoc)
   }, [])
 
+  useEffect(() => {
+    if (zipFile) {
+      setImages([])
+    }
+  }, [zipFile])
+
+  useEffect(() => {
+    if (images.length > 0) {
+      setZipFile(null)
+      setZipFileName('')
+    }
+  }, [images])
+
   const showToast = (msg, type = 'success') => {
     setPopupMessage(msg)
     setPopupType(type)
@@ -196,6 +212,8 @@ export default function AddProduct() {
     setPublished(true)
     setBrandDropdown(false)
     setProductDropdown(false)
+    setZipFile(null)
+    setZipFileName('')
   }
 
   const handleBrandSearch = (e) => {
@@ -268,6 +286,26 @@ export default function AddProduct() {
     }
   }
 
+  const handleZipPick = (e) => {
+    const f = (e.target.files && e.target.files[0]) || null
+    if (!f) return
+    const name = String(f.name || '')
+    const ok = name.toLowerCase().endsWith('.zip') || f.type === 'application/zip' || f.type === 'application/x-zip-compressed'
+    if (!ok) {
+      showToast('Please choose a .zip file', 'error')
+      e.target.value = ''
+      return
+    }
+    setZipFile(f)
+    setZipFileName(name)
+    e.target.value = ''
+  }
+
+  const clearZip = () => {
+    setZipFile(null)
+    setZipFileName('')
+  }
+
   const removeImage = (url) => setImages((prev) => prev.filter((i) => i !== url))
 
   const payload = useMemo(() => {
@@ -288,9 +326,10 @@ export default function AddProduct() {
       discounted_price: discountedNum,
       description: finalDesc,
       images,
-      published: !!published
+      published: !!published,
+      images_zip: zipFile ? { filename: zipFileName } : null
     }
-  }, [productInput, modelName, brandInput, category, b2cPrice, b2cFinal, description, totalCount, images, published])
+  }, [productInput, modelName, brandInput, category, b2cPrice, b2cFinal, description, totalCount, images, published, zipFile, zipFileName])
 
   const validate = () => {
     const name = productInput.trim()
@@ -305,7 +344,8 @@ export default function AddProduct() {
     if (priceNum === null || priceNum <= 0) return 'Enter valid price'
     if (discountNum === null || discountNum < 0 || discountNum > 100) return 'Enter valid discount'
     if (finalNum === null || finalNum <= 0) return 'Final price is missing'
-    if (!images.length) return 'Upload at least one image'
+    if (!zipFile && !images.length) return 'Upload at least one image or a zip'
+    if (zipFile && images.length) return 'Choose either images or zip, not both'
     return ''
   }
 
@@ -319,7 +359,33 @@ export default function AddProduct() {
     try {
       setSubmitting(true)
       show()
-      await apiPost('/api/products', payload)
+
+      if (zipFile) {
+        const meta = {
+          name: productInput.trim(),
+          model_name: modelName.trim() ? modelName.trim() : null,
+          brand: brandInput.trim() ? brandInput.trim() : null,
+          category_slug: slugify(category) || null,
+          price: safeNum(b2cPrice),
+          discounted_price: safeNum(b2cFinal),
+          description: (() => {
+            const stock = String(totalCount || '').trim()
+            const descLines = []
+            if (description.trim()) descLines.push(description.trim())
+            if (stock) descLines.push(`Stock: ${stock}`)
+            return descLines.length ? descLines.join('\n') : null
+          })(),
+          published: !!published
+        }
+
+        const fd = new FormData()
+        fd.append('zip', zipFile)
+        fd.append('meta', JSON.stringify(meta))
+        await apiUpload('/api/products/upload-zip', fd)
+      } else {
+        await apiPost('/api/products', payload)
+      }
+
       showToast('Product added successfully', 'success')
       resetForm()
     } catch (e) {
@@ -467,14 +533,36 @@ export default function AddProduct() {
           <div className="ap-panel">
             <div className="ap-panel-head">
               <div className="ap-panel-title">Images</div>
-              <div className="ap-panel-sub">Up to 6 images</div>
+              <div className="ap-panel-sub">Choose images (up to 6) or upload a zip for multiple variants</div>
             </div>
 
-            <label className="ap-upload">
-              <div className="ap-upload-title">Choose images</div>
-              <div className="ap-upload-sub">PNG, JPG, WEBP (multiple allowed)</div>
-              <input type="file" accept="image/*" multiple onChange={handleMultiImageUpload} />
-            </label>
+            <div className="ap-grid ap-grid-1">
+              <div className="ap-field">
+                <label>Upload Images</label>
+                <label className="ap-upload">
+                  <div className="ap-upload-title">Choose images</div>
+                  <div className="ap-upload-sub">PNG, JPG, WEBP (multiple allowed)</div>
+                  <input type="file" accept="image/*" multiple onChange={handleMultiImageUpload} disabled={!!zipFile} />
+                </label>
+              </div>
+
+              <div className="ap-field">
+                <label>Upload Zip</label>
+                <label className="ap-upload">
+                  <div className="ap-upload-title">{zipFileName ? zipFileName : 'Choose zip file'}</div>
+                  <div className="ap-upload-sub">ZIP containing images (jpg/png/webp)</div>
+                  <input type="file" accept=".zip,application/zip,application/x-zip-compressed" onChange={handleZipPick} disabled={images.length > 0} />
+                </label>
+
+                {zipFile && (
+                  <div className="ap-zip-row">
+                    <button type="button" className="ap-mini" onClick={clearZip}>
+                      Remove Zip
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
 
             {images.length > 0 && (
               <div className="ap-images">
