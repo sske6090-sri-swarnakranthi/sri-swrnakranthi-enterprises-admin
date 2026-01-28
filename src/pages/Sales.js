@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import './Sales.css'
 import Navbar from './NavbarAdmin'
 import OrderDetailPopup from './OrderDetailPopup'
@@ -72,47 +72,49 @@ function firstName(items) {
   return it?.product_name || it?.name || it?.title || ''
 }
 
+function normalizeOrder(o) {
+  if (!o || typeof o !== 'object') return null
+  const id = o.id ?? o.order_id ?? o.orderId ?? null
+  if (!id) return null
+  const items = Array.isArray(o.items) ? o.items : []
+  const created_at = o.created_at ?? o.createdAt ?? o.created ?? null
+  const statusVal = o.order_status ?? o.status ?? 'PLACED'
+  const payStatus = o.payment_status ?? o.paymentStatus ?? o.payment_mode ?? o.paymentMode ?? 'PENDING'
+  const total_amount =
+    o.total_amount ??
+    o.totalAmount ??
+    o.totals?.payable ??
+    o.total ??
+    (items.length ? items.reduce((a, it) => a + Number(it.price || 0) * Number(it.qty || 0), 0) : 0)
+
+  return {
+    ...o,
+    id,
+    created_at,
+    status: statusVal,
+    order_status: statusVal,
+    payment_status: payStatus,
+    total_amount,
+    totals: { ...(o.totals || {}), payable: Number(total_amount || 0) },
+    items
+  }
+}
+
 export default function Sales() {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
+
   const [status, setStatus] = useState('ALL')
   const [paymentFilter, setPaymentFilter] = useState('ALL')
   const [stageFilter, setStageFilter] = useState('ALL')
   const [q, setQ] = useState('')
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
+
   const [detail, setDetail] = useState(null)
   const [detailLoading, setDetailLoading] = useState(false)
 
-  const normalizeOrder = (o) => {
-    if (!o || typeof o !== 'object') return null
-    const id = o.id ?? o.order_id ?? o.orderId ?? null
-    if (!id) return null
-    const items = Array.isArray(o.items) ? o.items : []
-    const created_at = o.created_at ?? o.createdAt ?? o.created ?? null
-    const statusVal = o.order_status ?? o.status ?? 'PLACED'
-    const payStatus = o.payment_status ?? o.paymentStatus ?? o.payment_mode ?? o.paymentMode ?? 'PENDING'
-    const total_amount =
-      o.total_amount ??
-      o.totalAmount ??
-      o.totals?.payable ??
-      o.total ??
-      (items.length ? items.reduce((a, it) => a + Number(it.price || 0) * Number(it.qty || 0), 0) : 0)
-
-    return {
-      ...o,
-      id,
-      created_at,
-      status: statusVal,
-      order_status: statusVal,
-      payment_status: payStatus,
-      total_amount,
-      totals: { ...(o.totals || {}), payable: Number(total_amount || 0) },
-      items
-    }
-  }
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true)
     try {
       const endpoints = [`${API_BASE}/api/orders/web/admin`, `${API_BASE}/api/orders/admin`, `${API_BASE}/api/orders`]
@@ -143,11 +145,11 @@ export default function Sales() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchOrders()
-  }, [])
+  }, [fetchOrders])
 
   const getPayable = (o) => {
     if (o?.total_amount != null) return Number(o.total_amount)
@@ -277,6 +279,74 @@ export default function Sales() {
         </div>
 
         <div className="sales-table-card">
+          <div className="sales-filters">
+            <div className="sales-filter">
+              <div className="k">Search</div>
+              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by order, customer, mobile, email..." />
+            </div>
+
+            <div className="sales-filter">
+              <div className="k">Status</div>
+              <select value={status} onChange={(e) => setStatus(e.target.value)}>
+                {STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="sales-filter">
+              <div className="k">Payment</div>
+              <select value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value)}>
+                {PAYMENT_FILTERS.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="sales-filter">
+              <div className="k">Stage</div>
+              <select value={stageFilter} onChange={(e) => setStageFilter(e.target.value)}>
+                {STAGE_FILTERS.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="sales-filter">
+              <div className="k">From</div>
+              <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+            </div>
+
+            <div className="sales-filter">
+              <div className="k">To</div>
+              <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+            </div>
+
+            <div className="sales-filter">
+              <div className="k"> </div>
+              <button
+                className="sales-btn sales-btn-ghost"
+                type="button"
+                onClick={() => {
+                  setStatus('ALL')
+                  setPaymentFilter('ALL')
+                  setStageFilter('ALL')
+                  setQ('')
+                  setFrom('')
+                  setTo('')
+                }}
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+
           {loading ? (
             <div className="sales-loading">
               <div className="spinner" />
