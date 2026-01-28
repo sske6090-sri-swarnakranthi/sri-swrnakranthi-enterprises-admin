@@ -28,14 +28,8 @@ const NavbarAdmin = () => {
 
   const navLinks = [
     { name: 'Products', path: '/' },
-    //{ name: 'Transactions', path: '/transactions' },
-    //{ name: 'Stocks', path: '/stocks' },
     { name: 'Sales', path: '/sales' },
     { name: 'Customers', path: '/customers' }
-    /*{ name: 'POS', path: '/pos' },
-    { name: 'Import', path: '/import' },
-    { name: 'Homepage Images', path: '/homepage-images' },
-    { name: 'Cancellations', path: '/order-issues' } */
   ]
 
   return (
@@ -46,7 +40,7 @@ const NavbarAdmin = () => {
         </div>
 
         <div className="nav-toggle-final" onClick={() => setIsMobileNavOpen(!isMobileNavOpen)}>
-          <div className="dot-grid-final">
+          <div className={`dot-grid-final ${isMobileNavOpen ? 'dots-open' : ''}`}>
             {[...Array(9)].map((_, i) => (
               <span key={i}></span>
             ))}

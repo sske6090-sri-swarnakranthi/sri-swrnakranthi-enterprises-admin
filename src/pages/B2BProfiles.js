@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './B2BProfiles.css'
 
-const DEFAULT_API_BASE = 'http://localhost:5000'
+const DEFAULT_API_BASE = 'https://sri-swarnakranthi-enterprises-backe.vercel.app'
 const API_BASE_RAW =
   (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) ||
   (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_BASE) ||
   DEFAULT_API_BASE
-const API_BASE = API_BASE_RAW.replace(/\/+$/, '')
+const API_BASE = String(API_BASE_RAW || DEFAULT_API_BASE).replace(/\/+$/, '')
 
 const isValidEmail = (v) => /^\S+@\S+\.\S+$/.test(v)
 const isValidMobile = (v) => /^[6-9]\d{9}$/.test(v)
@@ -48,7 +48,7 @@ const B2BProfiles = () => {
     setLoading(true)
     try {
       const res = await fetch(`${API_BASE}/api/user/b2b-customers`, { cache: 'no-store' })
-      const data = await res.json()
+      const data = await res.json().catch(() => [])
       setB2bCustomers(Array.isArray(data) ? data : [])
     } catch {
       setB2bCustomers([])
@@ -134,140 +134,159 @@ const B2BProfiles = () => {
   }, [showPopup, handleClickOutside])
 
   return (
-    <div className="b2b-wrap">
-      <div className="b2b-page">
-        <header className="b2b-header">
-          <div>
-            <div className="b2b-badge">Customers</div>
-            <h2 className="b2b-title">B2B Profiles</h2>
-            <p className="b2b-sub">Add and manage B2B customer accounts</p>
+    <div className="b2b2-screen">
+      <div className="b2b2-head">
+        <div>
+          <div className="b2b2-pill">B2B</div>
+          <h2 className="b2b2-title">Customer Profiles</h2>
+          <p className="b2b2-sub">Search, add, and manage B2B accounts</p>
+        </div>
+
+        <div className="b2b2-actions">
+          <div className="b2b2-search">
+            <span className="b2b2-icn">⌕</span>
+            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search name, email, mobile" />
           </div>
 
-          <div className="b2b-actions">
-            <div className="b2b-search">
-              <span className="search-icn">⌕</span>
-              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search name, email, mobile..." />
-            </div>
+          <button
+            className="b2b2-primary"
+            onClick={() => {
+              setShowPopup(true)
+              resetForm()
+            }}
+          >
+            Add Customer
+          </button>
+        </div>
+      </div>
 
-            <button
-              className="b2b-add"
-              onClick={() => {
-                setShowPopup(true)
-                resetForm()
-              }}
-            >
-              + Add Customer
-            </button>
+      <section className="b2b2-card">
+        <div className="b2b2-card-top">
+          <div className="b2b2-stat">
+            <div className="k">Total</div>
+            <div className="v">{loading ? '...' : b2bCustomers.length}</div>
           </div>
-        </header>
+          <div className="b2b2-stat">
+            <div className="k">Visible</div>
+            <div className="v">{loading ? '...' : filteredCustomers.length}</div>
+          </div>
+          <button className="b2b2-ghost" onClick={loadCustomers} disabled={loading}>
+            {loading ? 'Loading...' : 'Refresh'}
+          </button>
+        </div>
 
-        <section className="b2b-card">
-          <div className="b2b-table-wrap">
-            <table className="b2b-table">
-              <thead>
+        <div className="b2b2-table-wrap">
+          <table className="b2b2-table">
+            <thead>
+              <tr>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Mobile</th>
+                <th className="ar">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {loading && (
                 <tr>
-                  <th>Full Name</th>
-                  <th>Email</th>
-                  <th>Mobile</th>
-                  <th className="th-actions">Actions</th>
+                  <td colSpan="4" className="b2b2-empty">
+                    Loading customers...
+                  </td>
                 </tr>
-              </thead>
+              )}
 
-              <tbody>
-                {loading && (
-                  <tr>
-                    <td colSpan="4" className="b2b-empty">
-                      Loading customers...
+              {!loading &&
+                filteredCustomers.map((customer) => (
+                  <tr key={customer.id || customer.email}>
+                    <td className="b2b2-strong">{customer.name}</td>
+                    <td className="b2b2-soft">{customer.email}</td>
+                    <td className="b2b2-soft">{customer.mobile}</td>
+                    <td className="ar">
+                      <div className="b2b2-row-actions">
+                        <button className="b2b2-mini b2b2-mini-ghost" type="button">
+                          Change Password
+                        </button>
+                        <button className="b2b2-mini b2b2-mini-outline" type="button">
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
-                )}
+                ))}
 
-                {!loading &&
-                  filteredCustomers.map((customer) => (
-                    <tr key={customer.id}>
-                      <td className="cell-name">{customer.name}</td>
-                      <td className="cell-email">{customer.email}</td>
-                      <td className="cell-mobile">{customer.mobile}</td>
-                      <td className="cell-actions">
-                        <button className="btn-mini ghost">Change Password</button>
-                        <button className="btn-mini danger">Delete</button>
-                      </td>
-                    </tr>
-                  ))}
+              {!loading && filteredCustomers.length === 0 && (
+                <tr>
+                  <td colSpan="4" className="b2b2-empty">
+                    No customers yet
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-                {!loading && filteredCustomers.length === 0 && (
-                  <tr>
-                    <td colSpan="4" className="b2b-empty">
-                      No customers yet
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
+      {showPopup && (
+        <div className="b2b2-modal" role="dialog" aria-modal="true">
+          <div className="b2b2-modal-card" ref={popupRef}>
+            <div className="b2b2-modal-head">
+              <div>
+                <div className="b2b2-pill sm">New</div>
+                <h3 className="b2b2-modal-title">Add B2B Customer</h3>
+                <p className="b2b2-modal-sub">Create an account with email and mobile</p>
+              </div>
 
-        {showPopup && (
-          <div className="b2b-modal" role="dialog" aria-modal="true">
-            <div className="b2b-modal-card" ref={popupRef}>
               <button
-                className="b2b-close"
+                className="b2b2-close"
                 onClick={() => {
                   setShowPopup(false)
                   resetForm()
                 }}
+                aria-label="Close"
               >
                 ×
               </button>
+            </div>
 
-              <div className="b2b-modal-head">
-                <h3>Add New B2B Customer</h3>
-                <p>Fill the details carefully</p>
+            {!!formError && <div className="b2b2-error">{formError}</div>}
+
+            <div className="b2b2-form">
+              <div className="b2b2-field">
+                <label>Full Name</label>
+                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" />
               </div>
 
-              {!!formError && <div className="b2b-error">{formError}</div>}
+              <div className="b2b2-field">
+                <label>Email</label>
+                <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email address" />
+              </div>
 
-              <div className="b2b-form">
-                <div className="field">
-                  <label>Full Name</label>
-                  <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter full name" />
-                </div>
-
-                <div className="field">
-                  <label>Email</label>
-                  <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter email" />
-                </div>
-
-                <div className="field">
+              <div className="b2b2-grid">
+                <div className="b2b2-field">
                   <label>Mobile</label>
                   <input value={mobile} onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="10-digit mobile" />
                 </div>
 
-                <div className="field">
+                <div className="b2b2-field">
                   <label>Password</label>
                   <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Min 6 chars" type="password" />
                 </div>
 
-                <div className="field">
-                  <label>Confirm Password</label>
-                  <input
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Re-enter password"
-                    type="password"
-                  />
+                <div className="b2b2-field">
+                  <label>Confirm</label>
+                  <input value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repeat password" type="password" />
                 </div>
-
-                <button className="b2b-submit" onClick={handleAddCustomer}>
-                  Create Customer
-                </button>
               </div>
+
+              <button className="b2b2-primary full" onClick={handleAddCustomer}>
+                Create Customer
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {!!toast && <div className={`b2b-toast ${toastType}`}>{toast}</div>}
-      </div>
+      {!!toast && <div className={`b2b2-toast ${toastType}`}>{toast}</div>}
     </div>
   )
 }

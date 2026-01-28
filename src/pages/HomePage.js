@@ -54,11 +54,7 @@ const HomePage = () => {
               Delete
             </button>
 
-            <div
-              className={`hp-indicator ${
-                activeTab === 'Update' ? 'mid' : activeTab === 'Delete' ? 'right' : ''
-              }`}
-            />
+            <div className={`hp-indicator ${activeTab === 'Update' ? 'mid' : activeTab === 'Delete' ? 'right' : ''}`} />
           </div>
         </header>
 

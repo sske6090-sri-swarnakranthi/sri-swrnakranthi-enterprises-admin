@@ -51,72 +51,70 @@ const B2CProfiles = () => {
   }, [b2cCustomers, query])
 
   return (
-    <div className="b2c-wrap">
-      <div className="b2c-page">
-        <header className="b2c-header">
-          <div className="b2c-title-block">
-            <div className="b2c-badge">
-              <FiUsers />
-              Customers
-            </div>
-            <h2 className="b2c-title">B2C Profiles</h2>
-            <p className="b2c-sub">View and manage B2C customer accounts</p>
+    <div className="b2c2-screen">
+      <header className="b2c2-head">
+        <div>
+          <div className="b2c2-pill">
+            <FiUsers />
+            B2C
+          </div>
+          <h2 className="b2c2-title">Customer Profiles</h2>
+          <p className="b2c2-sub">View and search B2C customer accounts</p>
+        </div>
+
+        <div className="b2c2-tools">
+          <div className="b2c2-search">
+            <FiSearch />
+            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search name, email, mobile" />
           </div>
 
-          <div className="b2c-tools">
-            <div className="b2c-search">
-              <FiSearch />
-              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search name, email, mobile..." />
-            </div>
-
-            <div className="b2c-count">
-              <span>Total</span>
-              <strong>{filtered.length}</strong>
-            </div>
+          <div className="b2c2-stat">
+            <div className="k">Visible</div>
+            <div className="v">{loading ? '...' : filtered.length}</div>
           </div>
-        </header>
+        </div>
+      </header>
 
-        <section className="b2c-card">
-          <div className="b2c-table-wrap">
-            <table className="b2c-table">
-              <thead>
+      <section className="b2c2-card">
+        <div className="b2c2-table-wrap">
+          <table className="b2c2-table">
+            <thead>
+              <tr>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Mobile</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {loading && (
                 <tr>
-                  <th>Full Name</th>
-                  <th>Email</th>
-                  <th>Mobile</th>
+                  <td colSpan="3" className="b2c2-empty">
+                    Loading customers...
+                  </td>
                 </tr>
-              </thead>
+              )}
 
-              <tbody>
-                {loading && (
-                  <tr>
-                    <td colSpan="3" className="b2c-empty">
-                      Loading customers...
-                    </td>
+              {!loading &&
+                filtered.map((customer) => (
+                  <tr key={customer.id || customer.email}>
+                    <td className="b2c2-strong">{customer.name}</td>
+                    <td className="b2c2-soft">{customer.email}</td>
+                    <td className="b2c2-soft">{customer.mobile}</td>
                   </tr>
-                )}
+                ))}
 
-                {!loading &&
-                  filtered.map((customer) => (
-                    <tr key={customer.id}>
-                      <td className="cell-name">{customer.name}</td>
-                      <td className="cell-email">{customer.email}</td>
-                      <td className="cell-mobile">{customer.mobile}</td>
-                    </tr>
-                  ))}
-
-                {!loading && filtered.length === 0 && (
-                  <tr>
-                    <td colSpan="3" className="b2c-empty">
-                      No customers found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </div>
+              {!loading && filtered.length === 0 && (
+                <tr>
+                  <td colSpan="3" className="b2c2-empty">
+                    No customers found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   )
 }

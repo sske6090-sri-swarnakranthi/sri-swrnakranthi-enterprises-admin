@@ -1,181 +1,177 @@
 :root {
-  --bg: #070b16;
-  --card: rgba(255, 255, 255, 0.06);
-  --card2: rgba(255, 255, 255, 0.08);
-  --border: rgba(255, 255, 255, 0.12);
-  --text: #ffffff;
-  --muted: rgba(255, 255, 255, 0.7);
-  --blue: #2f80ff;
-  --blue2: rgba(47, 128, 255, 0.18);
-  --shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
-  --radius: 18px;
+  --white: #ffffff;
+  --blue: #2f8cff;
+  --blue2: #005eff;
+  --text: #0b1b3a;
+  --muted: rgba(11, 27, 58, 0.66);
+  --border: rgba(0, 94, 255, 0.18);
+  --shadow: 0 18px 55px rgba(0, 94, 255, 0.12);
+  --shadow2: 0 28px 80px rgba(0, 94, 255, 0.10);
+  --radius-lg: 22px;
+  --radius-md: 16px;
+  --radius-sm: 12px;
+  --transition: 160ms ease;
 }
 
 * {
   box-sizing: border-box;
 }
 
-.customers-wrap {
+.cust-screen {
   min-height: 100vh;
   background:
-    radial-gradient(900px 520px at -12% -18%, rgba(47, 128, 255, 0.16), transparent 60%),
-    radial-gradient(700px 520px at 110% -10%, rgba(255, 255, 255, 0.06), transparent 60%),
-    var(--bg);
+    radial-gradient(1200px 700px at 10% -10%, rgba(0, 94, 255, 0.14), transparent 60%),
+    radial-gradient(900px 520px at 110% 0%, rgba(47, 140, 255, 0.10), transparent 55%),
+    radial-gradient(900px 520px at 0% 110%, rgba(0, 94, 255, 0.08), transparent 55%),
+    var(--white);
   color: var(--text);
-  font-family: "Segoe UI", system-ui, -apple-system, Arial, Helvetica, sans-serif;
+  font-family: 'Segoe UI', system-ui, -apple-system, Arial, Helvetica, sans-serif;
 }
 
-.customers-page {
+.cust-page {
   max-width: 1300px;
   margin: 0 auto;
-  padding: 26px 20px 40px;
+  padding: 22px 18px 42px;
 }
 
-.customers-hero {
+.cust-hero {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 18px;
+  gap: 14px;
   flex-wrap: wrap;
-  padding: 10px 4px 20px;
+  padding: 10px 2px 14px;
 }
 
-.customers-badge {
+.cust-badge {
   display: inline-flex;
   align-items: center;
-  padding: 6px 12px;
+  padding: 7px 12px;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 950;
   border-radius: 999px;
-  border: 1px solid rgba(47, 128, 255, 0.35);
-  background: var(--blue2);
-  color: #cfe1ff;
+  border: 1px solid rgba(0, 94, 255, 0.22);
+  background: rgba(0, 94, 255, 0.06);
+  color: var(--blue2);
   width: fit-content;
 }
 
-.customers-title {
-  margin: 10px 0 5px;
-  font-size: 32px;
-  font-weight: 900;
-  letter-spacing: 0.3px;
+.cust-title {
+  margin: 10px 0 6px;
+  font-size: 30px;
+  font-weight: 950;
+  letter-spacing: 0.2px;
+  color: var(--text);
 }
 
-.customers-sub {
+.cust-sub {
   margin: 0;
   color: var(--muted);
-  font-weight: 600;
+  font-weight: 750;
   font-size: 14px;
 }
 
-.customers-tabs {
+.cust-tabs {
   position: relative;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  background: rgba(0, 0, 0, 0.38);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 7px;
-  border-radius: 14px;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 94, 255, 0.18);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow);
   overflow: hidden;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.35);
 }
 
-.customers-tab {
+.cust-tab {
   position: relative;
   z-index: 2;
-  padding: 11px 18px;
   border: none;
-  border-radius: 12px;
   background: transparent;
-  color: rgba(255, 255, 255, 0.85);
-  font-weight: 900;
+  color: rgba(11, 27, 58, 0.78);
+  padding: 11px 18px;
+  border-radius: 14px;
   cursor: pointer;
-  font-size: 14px;
-  transition: color 0.2s ease;
-  min-width: 140px;
+  font-size: 13px;
+  font-weight: 950;
+  min-width: 110px;
+  line-height: 1;
+  transition: color var(--transition), transform var(--transition);
 }
 
-.customers-tab.active {
-  color: #ffffff;
+.cust-tab:hover {
+  transform: translateY(-1px);
+  color: var(--text);
 }
 
-.customers-indicator {
+.cust-tab.active {
+  color: var(--white);
+}
+
+.cust-indicator {
   position: absolute;
-  left: 7px;
-  top: 7px;
-  bottom: 7px;
-  width: calc(50% - 7px);
-  border-radius: 12px;
-  background: linear-gradient(90deg, rgba(47, 128, 255, 0.9), rgba(47, 128, 255, 0.55));
-  box-shadow: 0 14px 40px rgba(47, 128, 255, 0.25);
-  transition: transform 0.25s ease;
   z-index: 1;
+  left: 6px;
+  top: 6px;
+  bottom: 6px;
+  width: calc(50% - 6px);
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--blue2), var(--blue));
+  box-shadow: 0 16px 46px rgba(0, 94, 255, 0.18);
+  transition: transform 0.25s ease;
 }
 
-.customers-indicator.right {
+.cust-indicator.right {
   transform: translateX(100%);
 }
 
-.customers-card {
-  border-radius: var(--radius);
+.cust-shell {
+  margin-top: 10px;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(10px);
-  padding: 14px;
-}
-
-.customers-card-inner {
-  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow2);
   overflow: hidden;
 }
 
-/* Make profile pages blend in nicely */
-.customers-card .b2b-wrap,
-.customers-card .b2c-container {
+.cust-shell-inner {
+  padding: 14px;
+  border-radius: var(--radius-lg);
+}
+
+.cust-shell .b2b-wrap,
+.cust-shell .b2c-container {
   padding: 0 !important;
   background: transparent !important;
   min-height: auto !important;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .customers-page {
-    padding: 20px 14px 34px;
+@media (max-width: 900px) {
+  .cust-page {
+    padding: 18px 14px 38px;
   }
 
-  .customers-title {
-    font-size: 26px;
-  }
-
-  .customers-sub {
-    font-size: 13px;
-  }
-
-  .customers-tabs {
+  .cust-tabs {
     width: 100%;
   }
 
-  .customers-tab {
+  .cust-tab {
     flex: 1;
     min-width: unset;
-    padding: 11px 12px;
-    font-size: 13px;
   }
 }
 
-@media (max-width: 480px) {
-  .customers-title {
-    font-size: 23px;
+@media (max-width: 520px) {
+  .cust-page {
+    padding: 14px 12px 34px;
   }
 
-  .customers-tab {
-    padding: 10px 10px;
-    font-size: 12px;
+  .cust-title {
+    font-size: 24px;
   }
 
-  .customers-card {
+  .cust-shell-inner {
     padding: 10px;
   }
 }

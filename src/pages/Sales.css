@@ -1,36 +1,30 @@
 :root {
-  --s-bg: #070812;
-  --s-card: rgba(255, 255, 255, 0.03);
-  --s-card2: rgba(255, 255, 255, 0.02);
-  --s-white: #ffffff;
-  --s-muted: rgba(255, 255, 255, 0.72);
-  --s-muted2: rgba(255, 255, 255, 0.58);
-  --s-border: rgba(255, 255, 255, 0.1);
-  --s-shadow: 0 22px 60px rgba(0, 0, 0, 0.75);
-  --s-shadow2: 0 28px 80px rgba(0, 0, 0, 0.82);
-  --s-radius-lg: 20px;
-  --s-radius-md: 16px;
-  --s-radius-sm: 12px;
-  --s-accent: #5b8cff;
-  --s-accent2: #2bd4ff;
-  --s-good: #35e3a1;
-  --s-warn: #ffd36e;
-  --s-bad: #ff6b7a;
-  --s-info: #8bb0ff;
-  --s-transition: 160ms ease;
+  --white: #ffffff;
+  --blue: #2f8cff;
+  --blue2: #005eff;
+  --text: #0b1b3a;
+  --muted: rgba(11, 27, 58, 0.72);
+  --border: rgba(0, 94, 255, 0.18);
+  --shadow: 0 18px 55px rgba(0, 94, 255, 0.12);
+  --shadow2: 0 28px 80px rgba(0, 94, 255, 0.10);
+  --radius-lg: 20px;
+  --radius-md: 16px;
+  --radius-sm: 12px;
+  --transition: 160ms ease;
 }
 
-.sales-screen {
+.sales2-screen {
   min-height: 100vh;
-  color: var(--s-white);
-  background: radial-gradient(1200px 700px at 10% -10%, rgba(91, 140, 255, 0.18), transparent 60%),
-    radial-gradient(900px 520px at 110% 0%, rgba(43, 212, 255, 0.12), transparent 55%),
-    radial-gradient(900px 520px at 0% 110%, rgba(91, 140, 255, 0.12), transparent 55%),
-    var(--s-bg);
+  color: var(--text);
+  background:
+    radial-gradient(1200px 700px at 10% -10%, rgba(0, 94, 255, 0.14), transparent 60%),
+    radial-gradient(900px 520px at 110% 0%, rgba(47, 140, 255, 0.10), transparent 55%),
+    radial-gradient(900px 520px at 0% 110%, rgba(0, 94, 255, 0.08), transparent 55%),
+    var(--white);
   padding: 22px 14px 64px;
 }
 
-.sales-wrap {
+.sales2-wrap {
   max-width: 1240px;
   margin: 0 auto;
   display: flex;
@@ -38,36 +32,34 @@
   gap: 14px;
 }
 
-.sales-hero {
+.sales2-hero {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 14px;
   padding: 14px 14px 12px;
-  border-radius: 22px;
-  border: 1px solid var(--s-border);
-  background: radial-gradient(900px 520px at 0% 0%, rgba(91, 140, 255, 0.16), transparent 55%),
-    rgba(255, 255, 255, 0.02);
-  box-shadow: var(--s-shadow);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background:
+    radial-gradient(900px 520px at 0% 0%, rgba(0, 94, 255, 0.08), transparent 55%),
+    rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow);
 }
 
-.sales-title {
+.sales2-title {
   font-size: 26px;
   font-weight: 950;
   letter-spacing: 0.2px;
-  background: linear-gradient(90deg, var(--s-accent2), var(--s-accent));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--text);
 }
 
-.sales-subtitle {
+.sales2-subtitle {
   margin-top: 4px;
   font-size: 13px;
-  color: var(--s-muted);
+  color: var(--muted);
 }
 
-.sales-btn {
+.sales2-btn {
   border: 1px solid transparent;
   cursor: pointer;
   border-radius: 999px;
@@ -75,128 +67,113 @@
   padding: 0 16px;
   font-weight: 950;
   letter-spacing: 0.2px;
-  transition: transform var(--s-transition), box-shadow var(--s-transition), background var(--s-transition), border-color var(--s-transition);
+  transition: transform var(--transition), box-shadow var(--transition), background var(--transition), border-color var(--transition);
   user-select: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
-.sales-btn-primary {
-  background: linear-gradient(135deg, rgba(91, 140, 255, 0.95), rgba(43, 212, 255, 0.85));
-  border-color: rgba(91, 140, 255, 0.35);
-  color: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 18px 46px rgba(43, 212, 255, 0.14);
+.sales2-btn-primary {
+  background: linear-gradient(135deg, var(--blue2), var(--blue));
+  border-color: rgba(0, 94, 255, 0.22);
+  color: var(--white);
+  box-shadow: 0 18px 46px rgba(0, 94, 255, 0.16);
 }
 
-.sales-btn-primary:hover {
+.sales2-btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 24px 60px rgba(43, 212, 255, 0.22);
+  box-shadow: 0 24px 60px rgba(0, 94, 255, 0.22);
 }
 
-.sales-btn-ghost {
-  background: rgba(255, 255, 255, 0.02);
-  border-color: rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.9);
+.sales2-btn-ghost {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(0, 94, 255, 0.20);
+  color: var(--blue2);
 }
 
-.sales-btn-ghost:hover {
+.sales2-btn-ghost:hover {
   transform: translateY(-1px);
-  border-color: rgba(91, 140, 255, 0.35);
-  box-shadow: 0 0 0 2px rgba(91, 140, 255, 0.08) inset;
+  border-color: rgba(0, 94, 255, 0.32);
+  box-shadow: 0 0 0 2px rgba(0, 94, 255, 0.08) inset;
 }
 
-.sales-btn-mini {
+.sales2-btn-mini {
   height: 34px;
   padding: 0 12px;
   font-size: 12px;
-  background: rgba(91, 140, 255, 0.08);
-  border-color: rgba(91, 140, 255, 0.22);
-  color: rgba(255, 255, 255, 0.92);
+  background: rgba(0, 94, 255, 0.08);
+  border-color: rgba(0, 94, 255, 0.22);
+  color: var(--blue2);
 }
 
-.sales-btn-mini:hover {
+.sales2-btn-mini:hover {
   transform: translateY(-1px);
-  border-color: rgba(43, 212, 255, 0.45);
-  box-shadow: 0 0 0 2px rgba(43, 212, 255, 0.08) inset;
+  border-color: rgba(0, 94, 255, 0.34);
+  box-shadow: 0 0 0 2px rgba(0, 94, 255, 0.08) inset;
 }
 
-.sales-stats {
+.sales2-kpis {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 
-.sales-stat {
-  border-radius: 20px;
-  border: 1px solid var(--s-border);
-  background: rgba(255, 255, 255, 0.02);
-  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.6);
+.kpi-card {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 16px 44px rgba(0, 94, 255, 0.08);
   padding: 12px 14px;
   display: grid;
   gap: 4px;
 }
 
-.sales-stat .k {
+.kpi-card .k {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: var(--s-muted2);
-  font-weight: 900;
+  color: rgba(11, 27, 58, 0.62);
+  font-weight: 950;
 }
 
-.sales-stat .v {
+.kpi-card .v {
   font-size: 18px;
   font-weight: 950;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--text);
 }
 
-.sales-stat .v.small {
+.kpi-card .v.small {
   font-size: 13px;
   font-weight: 900;
-  color: var(--s-muted);
+  color: var(--muted);
 }
 
-.sales-stat .v.accent {
-  background: linear-gradient(90deg, var(--s-accent2), var(--s-accent));
+.kpi-card .v.accent {
+  background: linear-gradient(90deg, var(--blue2), var(--blue));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-.sales-filters {
-  border-radius: 22px;
-  border: 1px solid var(--s-border);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(10, 11, 18, 0.92));
-  box-shadow: var(--s-shadow);
+.sales2-card {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow2);
+  overflow: hidden;
+}
+
+.sales2-filters {
   padding: 14px;
-}
-
-.sales-filters-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-
-.sales-filters-title {
-  font-size: 13px;
-  font-weight: 950;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.sales-filters-note {
-  font-size: 12px;
-  color: var(--s-muted2);
-}
-
-.sales-filters-grid {
+  border-bottom: 1px solid rgba(0, 94, 255, 0.14);
   display: grid;
-  grid-template-columns: 160px 160px 170px minmax(0, 1.6fr) 160px 160px;
+  grid-template-columns: 1.5fr 160px 160px 170px 160px 160px 120px;
   gap: 10px;
+  align-items: end;
+  background:
+    radial-gradient(900px 420px at 0% 0%, rgba(0, 94, 255, 0.06), transparent 55%),
+    rgba(255, 255, 255, 0.92);
 }
 
 .fg {
@@ -210,30 +187,34 @@
   min-width: 0;
 }
 
-.fg label {
+.fg.actions {
+  justify-self: end;
+}
+
+.lbl {
   font-size: 11px;
-  color: var(--s-muted2);
+  color: rgba(11, 27, 58, 0.65);
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  font-weight: 900;
+  font-weight: 950;
 }
 
 .fg select,
 .fg input {
   height: 40px;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.02);
-  color: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 94, 255, 0.20);
+  background: var(--white);
+  color: var(--text);
   padding: 0 12px;
   outline: none;
-  transition: border-color var(--s-transition), box-shadow var(--s-transition), transform var(--s-transition);
+  transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
 }
 
 .fg select:focus,
 .fg input:focus {
-  border-color: rgba(43, 212, 255, 0.55);
-  box-shadow: 0 0 0 2px rgba(43, 212, 255, 0.08);
+  border-color: rgba(0, 94, 255, 0.55);
+  box-shadow: 0 0 0 2px rgba(0, 94, 255, 0.10);
   transform: translateY(-0.5px);
 }
 
@@ -243,15 +224,15 @@
   gap: 10px;
   height: 40px;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(0, 94, 255, 0.20);
+  background: var(--white);
   padding: 0 12px;
-  transition: border-color var(--s-transition), box-shadow var(--s-transition), transform var(--s-transition);
+  transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
 }
 
 .searchbox:focus-within {
-  border-color: rgba(43, 212, 255, 0.55);
-  box-shadow: 0 0 0 2px rgba(43, 212, 255, 0.08);
+  border-color: rgba(0, 94, 255, 0.55);
+  box-shadow: 0 0 0 2px rgba(0, 94, 255, 0.10);
   transform: translateY(-0.5px);
 }
 
@@ -259,11 +240,11 @@
   width: 14px;
   height: 14px;
   border-radius: 999px;
-  border: 2px solid rgba(255, 255, 255, 0.45);
+  border: 2px solid rgba(0, 94, 255, 0.55);
   border-right-color: transparent;
   border-bottom-color: transparent;
   transform: rotate(-45deg);
-  opacity: 0.75;
+  opacity: 0.9;
 }
 
 .searchbox input {
@@ -273,45 +254,20 @@
   border: none;
   background: transparent;
   outline: none;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--text);
 }
 
-.searchbox .clear {
-  width: 28px;
-  height: 28px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.02);
-  color: rgba(255, 255, 255, 0.85);
-  cursor: pointer;
-  transition: transform var(--s-transition), border-color var(--s-transition), background var(--s-transition);
-}
-
-.searchbox .clear:hover {
-  transform: translateY(-1px);
-  border-color: rgba(43, 212, 255, 0.35);
-  background: rgba(43, 212, 255, 0.06);
-}
-
-.sales-table-card {
-  border-radius: 22px;
-  border: 1px solid var(--s-border);
-  background: rgba(255, 255, 255, 0.02);
-  box-shadow: var(--s-shadow2);
-  overflow: hidden;
-}
-
-.sales-table-scroll {
+.sales2-table-scroll {
   overflow: auto;
 }
 
-.sales-table {
+.sales2-table {
   width: 100%;
   border-collapse: collapse;
   min-width: 980px;
 }
 
-.sales-table thead th {
+.sales2-table thead th {
   position: sticky;
   top: 0;
   z-index: 2;
@@ -321,20 +277,22 @@
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-weight: 950;
-  color: rgba(255, 255, 255, 0.9);
-  background: rgba(12, 13, 22, 0.95);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(11, 27, 58, 0.78);
+  background: rgba(255, 255, 255, 0.98);
+  border-bottom: 1px solid rgba(0, 94, 255, 0.14);
 }
 
-.sales-table tbody td {
+.sales2-table tbody td {
   padding: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(0, 94, 255, 0.10);
   vertical-align: middle;
   font-size: 13px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.92);
 }
 
-.sales-table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.03);
+.sales2-table tbody tr:hover td {
+  background: rgba(0, 94, 255, 0.04);
 }
 
 .ar {
@@ -353,8 +311,8 @@
   height: 54px;
   border-radius: 14px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(0, 94, 255, 0.18);
+  background: rgba(0, 94, 255, 0.04);
   flex: 0 0 auto;
 }
 
@@ -368,7 +326,7 @@
 .ph {
   width: 100%;
   height: 100%;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(0, 94, 255, 0.06);
 }
 
 .meta {
@@ -380,45 +338,19 @@
 .id {
   font-weight: 950;
   letter-spacing: 0.03em;
+  color: var(--text);
 }
 
 .name {
   font-size: 12px;
-  color: var(--s-muted);
+  color: rgba(11, 27, 58, 0.62);
   max-width: 420px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.tag {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: fit-content;
-  padding: 5px 10px;
-  border-radius: 999px;
-  font-size: 10px;
-  font-weight: 950;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.t-good {
-  border-color: rgba(53, 227, 161, 0.35);
-  background: rgba(53, 227, 161, 0.08);
-  color: rgba(255, 255, 255, 0.92);
-}
-
-.t-bad {
-  border-color: rgba(255, 107, 122, 0.45);
-  background: rgba(255, 107, 122, 0.1);
-  color: rgba(255, 255, 255, 0.95);
-}
-
-.badge {
+.pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -428,107 +360,66 @@
   font-weight: 950;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(0, 94, 255, 0.20);
+  background: rgba(0, 94, 255, 0.06);
   white-space: nowrap;
+  color: var(--blue2);
 }
 
-.s-good {
-  border-color: rgba(53, 227, 161, 0.35);
-  background: rgba(53, 227, 161, 0.08);
+.tone-ok {
+  border-color: rgba(0, 94, 255, 0.26);
+  background: rgba(0, 94, 255, 0.10);
 }
 
-.s-info {
-  border-color: rgba(139, 176, 255, 0.35);
-  background: rgba(139, 176, 255, 0.08);
+.tone-info {
+  border-color: rgba(0, 94, 255, 0.22);
+  background: rgba(0, 94, 255, 0.08);
 }
 
-.s-warn {
-  border-color: rgba(255, 211, 110, 0.35);
-  background: rgba(255, 211, 110, 0.08);
+.tone-soft {
+  border-color: rgba(0, 94, 255, 0.18);
+  background: rgba(0, 94, 255, 0.06);
 }
 
-.s-ok {
-  border-color: rgba(43, 212, 255, 0.35);
-  background: rgba(43, 212, 255, 0.08);
-}
-
-.s-bad {
-  border-color: rgba(255, 107, 122, 0.5);
-  background: rgba(255, 107, 122, 0.1);
-}
-
-.s-neutral {
-  border-color: rgba(255, 255, 255, 0.16);
-}
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 950;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  border: 1px dashed rgba(255, 255, 255, 0.22);
-  background: rgba(255, 255, 255, 0.02);
-  white-space: nowrap;
-}
-
-.p-good {
-  border-color: rgba(53, 227, 161, 0.45);
-  background: rgba(53, 227, 161, 0.08);
-}
-
-.p-warn {
-  border-color: rgba(255, 211, 110, 0.45);
-  background: rgba(255, 211, 110, 0.08);
-}
-
-.p-bad {
-  border-color: rgba(255, 107, 122, 0.55);
-  background: rgba(255, 107, 122, 0.1);
-}
-
-.p-neutral {
-  border-color: rgba(255, 255, 255, 0.22);
+.tone-bad {
+  border-color: rgba(0, 94, 255, 0.26);
+  background: rgba(0, 94, 255, 0.10);
 }
 
 .amt {
   font-weight: 950;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--text);
 }
 
 .soft {
-  color: var(--s-muted);
+  color: rgba(11, 27, 58, 0.62);
   font-size: 12px;
 }
 
 .main {
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--text);
 }
 
-.sales-loading {
+.sales2-loading {
   display: grid;
   place-items: center;
   gap: 10px;
   padding: 30px 16px;
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .spinner {
   width: 22px;
   height: 22px;
   border-radius: 999px;
-  border: 2px solid rgba(255, 255, 255, 0.18);
-  border-top-color: rgba(43, 212, 255, 0.9);
+  border: 2px solid rgba(0, 94, 255, 0.18);
+  border-top-color: rgba(0, 94, 255, 0.9);
   animation: sp 0.9s linear infinite;
 }
 
 .txt {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(11, 27, 58, 0.72);
   font-weight: 900;
 }
 
@@ -538,69 +429,75 @@
   }
 }
 
-.sales-empty {
+.sales2-empty {
   padding: 34px 18px 30px;
   text-align: center;
   display: grid;
   place-items: center;
   gap: 10px;
+  background: rgba(255, 255, 255, 0.92);
 }
 
-.sales-empty .ico {
+.sales2-empty .ico {
   width: 52px;
   height: 52px;
   border-radius: 18px;
-  border: 1px dashed rgba(255, 255, 255, 0.22);
-  background: rgba(91, 140, 255, 0.08);
+  border: 1px dashed rgba(0, 94, 255, 0.28);
+  background: rgba(0, 94, 255, 0.06);
   position: relative;
 }
 
-.sales-empty .ico::after {
+.sales2-empty .ico::after {
   content: '';
   position: absolute;
   inset: 14px;
   border-radius: 14px;
-  border: 1px solid rgba(43, 212, 255, 0.35);
-  background: radial-gradient(circle at center, rgba(43, 212, 255, 0.22), transparent 70%);
+  border: 1px solid rgba(0, 94, 255, 0.30);
+  background: radial-gradient(circle at center, rgba(0, 94, 255, 0.16), transparent 70%);
 }
 
-.sales-empty h3 {
+.sales2-empty h3 {
   margin: 2px 0 0;
   font-size: 16px;
   font-weight: 950;
+  color: var(--text);
 }
 
-.sales-empty p {
+.sales2-empty p {
   margin: 0;
   font-size: 13px;
-  color: var(--s-muted);
+  color: rgba(11, 27, 58, 0.68);
 }
 
-@media (max-width: 980px) {
-  .sales-filters-grid {
+@media (max-width: 1100px) {
+  .sales2-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .fg.actions {
+    justify-self: stretch;
+  }
+
+  .sales2-btn {
+    width: 100%;
+  }
+
+  .sales2-kpis {
     grid-template-columns: 1fr;
   }
 
-  .sales-stats {
-    grid-template-columns: 1fr;
-  }
-
-  .sales-hero {
+  .sales2-hero {
     flex-direction: column;
     align-items: flex-start;
-  }
-
-  .sales-btn {
-    width: 100%;
   }
 }
 
 @media (max-width: 720px) {
-  .sales-screen {
+  .sales2-screen {
     padding: 16px 10px 46px;
   }
 
-  .sales-title {
+  .sales2-title {
     font-size: 22px;
   }
 

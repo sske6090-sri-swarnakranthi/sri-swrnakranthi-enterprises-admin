@@ -246,47 +246,70 @@ export default function Sales() {
   const fmt = (n) =>
     new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(n || 0))
 
+  const statusTone = (s) => {
+    const st = statusText(s)
+    if (st === 'DELIVERED') return 'ok'
+    if (st === 'SHIPPED') return 'info'
+    if (st === 'PACKED') return 'info'
+    if (st === 'CONFIRMED') return 'info'
+    if (st === 'PLACED') return 'soft'
+    if (st === 'CANCELLED') return 'bad'
+    return 'soft'
+  }
+
+  const payTone = (p) => {
+    const pm = normalizePayMode(p)
+    if (pm === 'PREPAID') return 'ok'
+    if (pm === 'COD') return 'info'
+    if (pm === 'PENDING') return 'soft'
+    if (pm === 'FAILED') return 'bad'
+    return 'soft'
+  }
+
   return (
-    <div className="sales-screen">
+    <div className="sales2-screen">
       <Navbar />
 
-      <div className="sales-wrap">
-        <div className="sales-hero">
-          <div className="sales-hero-left">
-            <div className="sales-title">Sales</div>
-            <div className="sales-subtitle">Manage orders with faster search, cleaner filters, and crisp visuals</div>
+      <div className="sales2-wrap">
+        <div className="sales2-hero">
+          <div className="sales2-hero-left">
+            <div className="sales2-title">Sales</div>
+            <div className="sales2-subtitle">Search, filter, and review orders in one clean view</div>
           </div>
-          <div className="sales-hero-right">
-            <button className="sales-btn sales-btn-primary" onClick={fetchOrders}>
+          <div className="sales2-hero-right">
+            <button className="sales2-btn sales2-btn-primary" onClick={fetchOrders}>
               Refresh
             </button>
           </div>
         </div>
 
-        <div className="sales-stats">
-          <div className="sales-stat">
+        <div className="sales2-kpis">
+          <div className="kpi-card">
             <div className="k">Orders</div>
             <div className="v">{loading ? '...' : filtered.length}</div>
           </div>
-          <div className="sales-stat">
+          <div className="kpi-card">
             <div className="k">Total</div>
             <div className="v accent">{loading ? '...' : fmt(grand)}</div>
           </div>
-          <div className="sales-stat">
-            <div className="k">Date Range</div>
+          <div className="kpi-card">
+            <div className="k">Range</div>
             <div className="v small">{from && to ? `${from} → ${to}` : from ? `From ${from}` : to ? `To ${to}` : 'All time'}</div>
           </div>
         </div>
 
-        <div className="sales-table-card">
-          <div className="sales-filters">
-            <div className="sales-filter">
-              <div className="k">Search</div>
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by order, customer, mobile, email..." />
+        <div className="sales2-card">
+          <div className="sales2-filters">
+            <div className="fg wide">
+              <div className="lbl">Search</div>
+              <div className="searchbox">
+                <span className="sicon" />
+                <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Order id, customer, mobile, email..." />
+              </div>
             </div>
 
-            <div className="sales-filter">
-              <div className="k">Status</div>
+            <div className="fg">
+              <div className="lbl">Status</div>
               <select value={status} onChange={(e) => setStatus(e.target.value)}>
                 {STATUSES.map((s) => (
                   <option key={s} value={s}>
@@ -296,8 +319,8 @@ export default function Sales() {
               </select>
             </div>
 
-            <div className="sales-filter">
-              <div className="k">Payment</div>
+            <div className="fg">
+              <div className="lbl">Payment</div>
               <select value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value)}>
                 {PAYMENT_FILTERS.map((s) => (
                   <option key={s} value={s}>
@@ -307,8 +330,8 @@ export default function Sales() {
               </select>
             </div>
 
-            <div className="sales-filter">
-              <div className="k">Stage</div>
+            <div className="fg">
+              <div className="lbl">Stage</div>
               <select value={stageFilter} onChange={(e) => setStageFilter(e.target.value)}>
                 {STAGE_FILTERS.map((s) => (
                   <option key={s} value={s}>
@@ -318,20 +341,20 @@ export default function Sales() {
               </select>
             </div>
 
-            <div className="sales-filter">
-              <div className="k">From</div>
+            <div className="fg">
+              <div className="lbl">From</div>
               <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
             </div>
 
-            <div className="sales-filter">
-              <div className="k">To</div>
+            <div className="fg">
+              <div className="lbl">To</div>
               <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
             </div>
 
-            <div className="sales-filter">
-              <div className="k"> </div>
+            <div className="fg actions">
+              <div className="lbl"> </div>
               <button
-                className="sales-btn sales-btn-ghost"
+                className="sales2-btn sales2-btn-ghost"
                 type="button"
                 onClick={() => {
                   setStatus('ALL')
@@ -348,19 +371,19 @@ export default function Sales() {
           </div>
 
           {loading ? (
-            <div className="sales-loading">
+            <div className="sales2-loading">
               <div className="spinner" />
               <div className="txt">Fetching latest orders</div>
             </div>
           ) : filtered.length === 0 ? (
-            <div className="sales-empty">
+            <div className="sales2-empty">
               <div className="ico" />
               <h3>No orders found</h3>
               <p>Try adjusting filters or clearing the search.</p>
             </div>
           ) : (
-            <div className="sales-table-scroll">
-              <table className="sales-table">
+            <div className="sales2-table-scroll">
+              <table className="sales2-table">
                 <thead>
                   <tr>
                     <th>Order</th>
@@ -393,29 +416,37 @@ export default function Sales() {
                             </div>
                           </div>
                         </td>
+
                         <td>
                           <span className="soft">{o.created_at ? new Date(o.created_at).toLocaleString('en-IN') : '-'}</span>
                         </td>
+
                         <td>
-                          <span className="badge">{st}</span>
+                          <span className={`pill tone-${statusTone(st)}`}>{st}</span>
                         </td>
+
                         <td>
-                          <span className="chip">{payMode}</span>
+                          <span className={`pill tone-${payTone(payMode)}`}>{payMode}</span>
                         </td>
+
                         <td>
                           <span className="main">{getCustomerLabel(o)}</span>
                         </td>
+
                         <td>
                           <span className="main">{o.customer_mobile || '-'}</span>
                         </td>
+
                         <td>
                           <span className="soft">{o.customer_email || '-'}</span>
                         </td>
+
                         <td className="ar">
                           <span className="amt">{fmt(getPayable(o))}</span>
                         </td>
+
                         <td className="ar">
-                          <button className="sales-btn sales-btn-mini" onClick={() => openDetail(o.id)}>
+                          <button className="sales2-btn sales2-btn-mini" onClick={() => openDetail(o.id)}>
                             View
                           </button>
                         </td>

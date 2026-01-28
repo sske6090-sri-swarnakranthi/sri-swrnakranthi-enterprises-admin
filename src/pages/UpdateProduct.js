@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import './UpdateProduct.css'
 
-const DEFAULT_API_BASE = 'http://localhost:5000'
-const DEFAULT_ASSETS_BASE = 'http://localhost:5000/uploads'
+const DEFAULT_API_BASE = 'https://sri-swarnakranthi-enterprises-backe.vercel.app'
+const DEFAULT_ASSETS_BASE = 'https://sri-swarnakranthi-enterprises-backe.vercel.app/uploads'
 
 const API_BASE_RAW =
   (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) ||
@@ -14,14 +14,14 @@ const ASSETS_BASE_RAW =
   (typeof process !== 'undefined' && process.env && process.env.REACT_APP_ASSETS_BASE) ||
   DEFAULT_ASSETS_BASE
 
-const API_BASE = API_BASE_RAW.replace(/\/+$/, '')
-const ASSETS_BASE = ASSETS_BASE_RAW.replace(/\/+$/, '')
+const API_BASE = String(API_BASE_RAW || DEFAULT_API_BASE).replace(/\/+$/, '')
+const ASSETS_BASE = String(ASSETS_BASE_RAW || DEFAULT_ASSETS_BASE).replace(/\/+$/, '')
 
 const normalizeAssetUrl = (maybeRelative) => {
   if (!maybeRelative) return ''
   if (/^https?:\/\//i.test(maybeRelative)) return maybeRelative
   const base = ASSETS_BASE || API_BASE
-  const needsSlash = !maybeRelative.startsWith('/')
+  const needsSlash = !String(maybeRelative).startsWith('/')
   return `${base}${needsSlash ? '/' : ''}${maybeRelative}`
 }
 
@@ -258,167 +258,213 @@ const UpdateProduct = () => {
   }
 
   return (
-    <div className="up-wrap">
-      <div className="up-toolbar">
-        <div className="up-filters">
-          {['All', 'Men', 'Women', 'Kids'].map((f) => (
-            <button key={f} className={`up-chip ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>
-              {f}
-            </button>
-          ))}
+    <div className="up2-screen">
+      <div className="up2-hero">
+        <div className="up2-hero-left">
+          <div className="up2-title">Update Products</div>
+          <div className="up2-subtitle">Edit pricing, stock, and images, then save only what changed</div>
         </div>
 
-        <div className="up-tools">
-          <div className="up-search">
-            <input
-              className="up-search-input"
-              placeholder="Search brand, product, color, size"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-
-          <select className="up-select" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-            <option value="recent">Sort: Recent</option>
-            <option value="price_b2c_asc">Price B2C: Low to High</option>
-            <option value="price_b2c_desc">Price B2C: High to Low</option>
-            <option value="stock_desc">Stock: High to Low</option>
-            <option value="brand_asc">Brand: A → Z</option>
-          </select>
-
-          <button className="up-btn" onClick={fetchAll} disabled={isLoading}>
+        <div className="up2-hero-right">
+          <button className="up2-btn up2-btn-ghost" onClick={fetchAll} disabled={isLoading}>
             {isLoading ? 'Loading...' : 'Refresh'}
           </button>
-        </div>
-      </div>
-
-      <div className="up-card">
-        <div className="up-card-head">
-          <h2 className="up-title">Update Products</h2>
-          <div className="up-meta">
-            <span className="up-meta-item">Total: {filteredSortedRows.length}</span>
-            <span className="up-meta-item">Edited: {dirtyRows.length}</span>
-          </div>
-        </div>
-
-        <div className="up-table-wrap">
-          <table className="up-table">
-            <thead>
-              <tr>
-                <th>Sl</th>
-                <th>Category</th>
-                <th>Brand</th>
-                <th>Product Name</th>
-                <th>B2B Price</th>
-                <th>B2B %</th>
-                <th>B2B Final</th>
-                <th>B2C Price</th>
-                <th>B2C %</th>
-                <th>B2C Final</th>
-                <th>Stock</th>
-                <th>Image</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {filteredSortedRows.map((product, idx) => {
-                const index = rows.findIndex((r) => r.id === product.id)
-                const b2bFinal = computeFinal(product.b2b_actual_price, product.b2b_discount).toFixed(2)
-                const b2cFinal = computeFinal(product.b2c_actual_price, product.b2c_discount).toFixed(2)
-                const imgSrc = product.preview_url || product.image_url
-
-                return (
-                  <tr key={product.id || idx} className={product.dirty ? 'is-dirty' : ''}>
-                    <td className="up-td up-center">{idx + 1}</td>
-
-                    <td className="up-td">
-                      <input className="up-input" value={product.category} onChange={(e) => updateField(index, 'category', e.target.value)} />
-                    </td>
-
-                    <td className="up-td">
-                      <input className="up-input" value={product.brand} onChange={(e) => updateField(index, 'brand', e.target.value)} />
-                    </td>
-
-                    <td className="up-td">
-                      <input className="up-input" value={product.product_name} onChange={(e) => updateField(index, 'product_name', e.target.value)} />
-                    </td>
-
-                    <td className="up-td">
-                      <input className="up-input" type="number" value={product.b2b_actual_price} onChange={(e) => updateField(index, 'b2b_actual_price', e.target.value)} />
-                    </td>
-
-                    <td className="up-td">
-                      <input className="up-input" type="number" value={product.b2b_discount} onChange={(e) => updateField(index, 'b2b_discount', e.target.value)} />
-                    </td>
-
-                    <td className="up-td up-center up-bold">{b2bFinal}</td>
-
-                    <td className="up-td">
-                      <input className="up-input" type="number" value={product.b2c_actual_price} onChange={(e) => updateField(index, 'b2c_actual_price', e.target.value)} />
-                    </td>
-
-                    <td className="up-td">
-                      <input className="up-input" type="number" value={product.b2c_discount} onChange={(e) => updateField(index, 'b2c_discount', e.target.value)} />
-                    </td>
-
-                    <td className="up-td up-center up-bold">{b2cFinal}</td>
-
-                    <td className="up-td">
-                      <input className="up-input" type="number" value={product.count} onChange={(e) => updateField(index, 'count', e.target.value)} />
-                    </td>
-
-                    <td className="up-td up-center">
-                      <div className="up-img-box">
-                        <img className="up-img" src={imgSrc} alt="product" />
-                      </div>
-
-                      <label className="up-upload">
-                        Add Image
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => handleImageChange(index, e.target.files && e.target.files[0])}
-                        />
-                      </label>
-                    </td>
-
-                    <td className="up-td up-center">
-                      <span className={`up-status ${product.dirty ? 'dirty' : 'clean'}`}>{product.dirty ? 'Edited' : 'Saved'}</span>
-                    </td>
-                  </tr>
-                )
-              })}
-
-              {!filteredSortedRows.length && (
-                <tr>
-                  <td colSpan="13" className="up-empty">
-                    No products found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="up-actions">
-          <button className="up-save" onClick={handleUpdateClick}>
+          <button className="up2-btn up2-btn-primary" onClick={handleUpdateClick}>
             Save Changes
           </button>
         </div>
       </div>
 
-      {popupMessage && <div className={`up-toast ${popupType}`}>{popupMessage}</div>}
+      <div className="up2-panel">
+        <div className="up2-row">
+          <div className="up2-chips">
+            {['All', 'Men', 'Women', 'Kids'].map((f) => (
+              <button key={f} className={`up2-chip ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>
+                {f}
+              </button>
+            ))}
+          </div>
+
+          <div className="up2-tools">
+            <div className="up2-search">
+              <span className="up2-sicon" />
+              <input
+                className="up2-search-input"
+                placeholder="Search brand, product, color, size"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+
+            <select className="up2-select" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+              <option value="recent">Sort: Recent</option>
+              <option value="price_b2c_asc">Price B2C: Low to High</option>
+              <option value="price_b2c_desc">Price B2C: High to Low</option>
+              <option value="stock_desc">Stock: High to Low</option>
+              <option value="brand_asc">Brand: A → Z</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="up2-meta">
+          <div className="pill">
+            <span className="k">Total</span>
+            <span className="v">{filteredSortedRows.length}</span>
+          </div>
+          <div className={`pill ${dirtyRows.length ? 'pill-accent' : ''}`}>
+            <span className="k">Edited</span>
+            <span className="v">{dirtyRows.length}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="up2-card">
+        {isLoading ? (
+          <div className="up2-loading">
+            <div className="spinner" />
+            <div className="txt">Fetching products</div>
+          </div>
+        ) : (
+          <div className="up2-table-wrap">
+            <table className="up2-table">
+              <thead>
+                <tr>
+                  <th>Sl</th>
+                  <th>Category</th>
+                  <th>Brand</th>
+                  <th>Product Name</th>
+                  <th className="ar">B2B Price</th>
+                  <th className="ar">B2B %</th>
+                  <th className="ar">B2B Final</th>
+                  <th className="ar">B2C Price</th>
+                  <th className="ar">B2C %</th>
+                  <th className="ar">B2C Final</th>
+                  <th className="ar">Stock</th>
+                  <th>Image</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredSortedRows.map((product, idx) => {
+                  const index = rows.findIndex((r) => r.id === product.id)
+                  const b2bFinal = computeFinal(product.b2b_actual_price, product.b2b_discount).toFixed(2)
+                  const b2cFinal = computeFinal(product.b2c_actual_price, product.b2c_discount).toFixed(2)
+                  const imgSrc = product.preview_url || product.image_url
+
+                  return (
+                    <tr key={product.id || idx} className={product.dirty ? 'is-dirty' : ''}>
+                      <td className="center">{idx + 1}</td>
+
+                      <td>
+                        <input className="cell-input" value={product.category} onChange={(e) => updateField(index, 'category', e.target.value)} />
+                      </td>
+
+                      <td>
+                        <input className="cell-input" value={product.brand} onChange={(e) => updateField(index, 'brand', e.target.value)} />
+                      </td>
+
+                      <td>
+                        <input
+                          className="cell-input"
+                          value={product.product_name}
+                          onChange={(e) => updateField(index, 'product_name', e.target.value)}
+                        />
+                      </td>
+
+                      <td className="ar">
+                        <input
+                          className="cell-input ar"
+                          type="number"
+                          value={product.b2b_actual_price}
+                          onChange={(e) => updateField(index, 'b2b_actual_price', e.target.value)}
+                        />
+                      </td>
+
+                      <td className="ar">
+                        <input
+                          className="cell-input ar"
+                          type="number"
+                          value={product.b2b_discount}
+                          onChange={(e) => updateField(index, 'b2b_discount', e.target.value)}
+                        />
+                      </td>
+
+                      <td className="ar">
+                        <span className="final">{b2bFinal}</span>
+                      </td>
+
+                      <td className="ar">
+                        <input
+                          className="cell-input ar"
+                          type="number"
+                          value={product.b2c_actual_price}
+                          onChange={(e) => updateField(index, 'b2c_actual_price', e.target.value)}
+                        />
+                      </td>
+
+                      <td className="ar">
+                        <input
+                          className="cell-input ar"
+                          type="number"
+                          value={product.b2c_discount}
+                          onChange={(e) => updateField(index, 'b2c_discount', e.target.value)}
+                        />
+                      </td>
+
+                      <td className="ar">
+                        <span className="final">{b2cFinal}</span>
+                      </td>
+
+                      <td className="ar">
+                        <input className="cell-input ar" type="number" value={product.count} onChange={(e) => updateField(index, 'count', e.target.value)} />
+                      </td>
+
+                      <td className="center">
+                        <div className="img-stack">
+                          <div className="imgbox">{imgSrc ? <img className="img" src={imgSrc} alt="product" /> : <div className="imgph" />}</div>
+                          <label className="upload">
+                            Replace
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleImageChange(index, e.target.files && e.target.files[0])}
+                            />
+                          </label>
+                        </div>
+                      </td>
+
+                      <td className="center">
+                        <span className={`status ${product.dirty ? 'dirty' : 'clean'}`}>{product.dirty ? 'Edited' : 'Saved'}</span>
+                      </td>
+                    </tr>
+                  )
+                })}
+
+                {!filteredSortedRows.length && (
+                  <tr>
+                    <td colSpan="13" className="empty">
+                      No products found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {popupMessage && <div className={`toast ${popupType}`}>{popupMessage}</div>}
 
       {popupConfirm && (
-        <div className="up-modal">
-          <div className="up-modal-box">
-            <p className="up-modal-title">Save all edited rows?</p>
-            <div className="up-modal-actions">
-              <button className="up-modal-btn primary" onClick={() => confirmUpdate(true)}>
+        <div className="modal">
+          <div className="modal-box">
+            <p className="modal-title">Save all edited rows?</p>
+            <div className="modal-actions">
+              <button className="up2-btn up2-btn-primary" onClick={() => confirmUpdate(true)}>
                 Yes
               </button>
-              <button className="up-modal-btn" onClick={() => confirmUpdate(false)}>
+              <button className="up2-btn up2-btn-ghost" onClick={() => confirmUpdate(false)}>
                 No
               </button>
             </div>

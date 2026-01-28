@@ -1,13 +1,13 @@
 :root {
-  --bg: #070b16;
   --white: #ffffff;
-  --muted: rgba(255, 255, 255, 0.72);
-  --border: rgba(255, 255, 255, 0.12);
-  --glass: rgba(255, 255, 255, 0.06);
-  --glass2: rgba(255, 255, 255, 0.085);
-  --blue: #2f80ff;
-  --blue2: rgba(47, 128, 255, 0.18);
-  --shadow: 0 18px 55px rgba(0, 0, 0, 0.55);
+  --blue: #2f8cff;
+  --blue2: #005eff;
+  --text: #0b1b3a;
+  --muted: rgba(11, 27, 58, 0.7);
+  --border: rgba(0, 94, 255, 0.18);
+  --glass: rgba(0, 94, 255, 0.06);
+  --glass2: rgba(0, 94, 255, 0.09);
+  --shadow: 0 18px 55px rgba(0, 94, 255, 0.12);
   --radius: 18px;
   --transition: 220ms cubic-bezier(.2, .8, .2, 1);
 }
@@ -18,11 +18,12 @@
 
 .hp-wrap {
   min-height: 100vh;
-  color: var(--white);
+  color: var(--text);
   background:
-    radial-gradient(920px 520px at -12% -18%, rgba(47, 128, 255, 0.16), transparent 60%),
-    radial-gradient(700px 520px at 110% -10%, rgba(255, 255, 255, 0.06), transparent 60%),
-    var(--bg);
+    radial-gradient(920px 520px at -12% -18%, rgba(0, 94, 255, 0.14), transparent 60%),
+    radial-gradient(700px 520px at 110% -10%, rgba(47, 140, 255, 0.10), transparent 60%),
+    radial-gradient(520px 360px at 50% 120%, rgba(0, 94, 255, 0.08), transparent 55%),
+    var(--white);
 }
 
 .hp-page {
@@ -43,9 +44,10 @@
 .hp-title {
   margin: 0;
   font-size: 22px;
-  font-weight: 650;
+  font-weight: 750;
   letter-spacing: 0.2px;
   line-height: 1.2;
+  color: var(--text);
 }
 
 .hp-tabs {
@@ -55,9 +57,9 @@
   gap: 8px;
   padding: 5px;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(0, 0, 0, 0.32);
-  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.32);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 12px 34px rgba(0, 94, 255, 0.10);
   backdrop-filter: blur(10px);
   overflow: hidden;
 }
@@ -67,19 +69,19 @@
   z-index: 2;
   border: none;
   background: transparent;
-  color: rgba(255, 255, 255, 0.86);
+  color: rgba(0, 94, 255, 0.85);
   padding: 8px 14px;
   border-radius: 10px;
   cursor: pointer;
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 750;
   min-width: 92px;
   line-height: 1;
   transition: color var(--transition);
 }
 
 .hp-tab:hover {
-  color: var(--white);
+  color: var(--blue2);
 }
 
 .hp-tab.active {
@@ -94,8 +96,8 @@
   bottom: 5px;
   width: calc(33.333% - 5px);
   border-radius: 10px;
-  background: linear-gradient(90deg, rgba(47, 128, 255, 0.92), rgba(47, 128, 255, 0.58));
-  box-shadow: 0 12px 34px rgba(47, 128, 255, 0.22);
+  background: linear-gradient(90deg, var(--blue2), var(--blue));
+  box-shadow: 0 12px 34px rgba(0, 94, 255, 0.18);
   transition: transform 0.25s ease;
 }
 
@@ -111,7 +113,7 @@
   margin-top: 10px;
   border-radius: var(--radius);
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, var(--glass2), var(--glass));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(0, 94, 255, 0.05));
   box-shadow: var(--shadow);
   backdrop-filter: blur(10px);
   padding: 2px;
@@ -122,6 +124,7 @@
   overflow: hidden;
   overflow: auto;
   scrollbar-width: none;
+  background: var(--white);
 }
 
 .hp-card-inner::-webkit-scrollbar {

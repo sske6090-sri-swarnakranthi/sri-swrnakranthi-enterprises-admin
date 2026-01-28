@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import './DeleteProduct.css'
 
-const DEFAULT_API_BASE = 'http://localhost:5000'
-const DEFAULT_ASSETS_BASE = 'http://localhost:5000/uploads'
+const DEFAULT_API_BASE = 'https://sri-swarnakranthi-enterprises-backe.vercel.app'
+const DEFAULT_ASSETS_BASE = 'https://sri-swarnakranthi-enterprises-backe.vercel.app/uploads'
 
 const API_BASE_RAW =
   (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) ||
@@ -14,10 +14,11 @@ const ASSETS_BASE_RAW =
   (typeof process !== 'undefined' && process.env && process.env.REACT_APP_ASSETS_BASE) ||
   DEFAULT_ASSETS_BASE
 
-const API_BASE = String(API_BASE_RAW || '').replace(/\/+$/, '')
-const ASSETS_BASE = String(ASSETS_BASE_RAW || '').replace(/\/+$/, '')
+const API_BASE = String(API_BASE_RAW || DEFAULT_API_BASE).replace(/\/+$/, '')
+const ASSETS_BASE = String(ASSETS_BASE_RAW || DEFAULT_ASSETS_BASE).replace(/\/+$/, '')
 
 const toArray = (x) => (Array.isArray(x) ? x : [])
+
 const coerceNumber = (v) => {
   const n = typeof v === 'number' ? v : parseFloat(String(v || '').trim())
   return Number.isFinite(n) ? n : 0
@@ -109,8 +110,10 @@ const DeleteProduct = () => {
     const sorted = [...list]
 
     if (sortBy === 'recent') sorted.sort((a, b) => (b.id || 0) - (a.id || 0))
-    else if (sortBy === 'price_b2c_asc') sorted.sort((a, b) => computeFinal(a.b2c_actual_price, a.b2c_discount) - computeFinal(b.b2c_actual_price, b.b2c_discount))
-    else if (sortBy === 'price_b2c_desc') sorted.sort((a, b) => computeFinal(b.b2c_actual_price, b.b2c_discount) - computeFinal(a.b2c_actual_price, a.b2c_discount))
+    else if (sortBy === 'price_b2c_asc')
+      sorted.sort((a, b) => computeFinal(a.b2c_actual_price, a.b2c_discount) - computeFinal(b.b2c_actual_price, b.b2c_discount))
+    else if (sortBy === 'price_b2c_desc')
+      sorted.sort((a, b) => computeFinal(b.b2c_actual_price, b.b2c_discount) - computeFinal(a.b2c_actual_price, a.b2c_discount))
     else if (sortBy === 'stock_desc') sorted.sort((a, b) => coerceNumber(b.count) - coerceNumber(a.count))
     else if (sortBy === 'brand_asc') sorted.sort((a, b) => String(a.brand || '').localeCompare(String(b.brand || '')))
 
@@ -166,124 +169,162 @@ const DeleteProduct = () => {
     setSelectedIds(next)
   }
 
+  const selectedCount = selectedIds.size
+  const allVisibleSelected = filteredSortedRows.length > 0 && filteredSortedRows.every((r) => selectedIds.has(r.id))
+
   return (
-    <div className="dp-wrap">
-      <div className="dp-toolbar">
-        <div className="dp-filters">
-          {['All', 'Men', 'Women', 'Kids'].map((f) => (
-            <button key={f} className={`dp-chip ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>
-              {f}
-            </button>
-          ))}
+    <div className="dp2-screen">
+      <div className="dp2-hero">
+        <div className="dp2-hero-left">
+          <div className="dp2-title">Delete Products</div>
+          <div className="dp2-subtitle">Select items safely, then delete in one click</div>
         </div>
 
-        <div className="dp-tools">
-          <input className="dp-search" placeholder="Search brand, product" value={search} onChange={(e) => setSearch(e.target.value)} />
-
-          <select className="dp-select" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-            <option value="recent">Sort: Recent</option>
-            <option value="price_b2c_asc">Price B2C: Low to High</option>
-            <option value="price_b2c_desc">Price B2C: High to Low</option>
-            <option value="stock_desc">Stock: High to Low</option>
-            <option value="brand_asc">Brand: A → Z</option>
-          </select>
-
-          <button className="dp-btn" onClick={fetchAll} disabled={isLoading}>
+        <div className="dp2-hero-right">
+          <button className="dp2-btn dp2-btn-ghost" onClick={fetchAll} disabled={isLoading}>
             {isLoading ? 'Loading...' : 'Refresh'}
           </button>
-
-          <button className="dp-danger" onClick={() => askDelete(Array.from(selectedIds))}>
-            Delete Selected
+          <button className="dp2-btn dp2-btn-primary" onClick={() => askDelete(Array.from(selectedIds))} disabled={!selectedCount}>
+            Delete Selected ({selectedCount})
           </button>
         </div>
       </div>
 
-      <div className="dp-card">
-        <div className="dp-card-head">
-          <h2 className="dp-title">Delete Products</h2>
-          <div className="dp-meta">
-            <span className="dp-pill">Visible: {filteredSortedRows.length}</span>
-            <span className="dp-pill">Selected: {selectedIds.size}</span>
+      <div className="dp2-panel">
+        <div className="dp2-row">
+          <div className="dp2-chips">
+            {['All', 'Men', 'Women', 'Kids'].map((f) => (
+              <button key={f} className={`dp2-chip ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>
+                {f}
+              </button>
+            ))}
+          </div>
+
+          <div className="dp2-tools">
+            <div className="dp2-search">
+              <span className="dp2-sicon" />
+              <input className="dp2-search-input" placeholder="Search brand or product" value={search} onChange={(e) => setSearch(e.target.value)} />
+            </div>
+
+            <select className="dp2-select" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+              <option value="recent">Sort: Recent</option>
+              <option value="price_b2c_asc">Price B2C: Low to High</option>
+              <option value="price_b2c_desc">Price B2C: High to Low</option>
+              <option value="stock_desc">Stock: High to Low</option>
+              <option value="brand_asc">Brand: A → Z</option>
+            </select>
           </div>
         </div>
 
-        <div className="dp-table-wrap">
-          <table className="dp-table">
-            <thead>
-              <tr>
-                <th className="dp-th">
-                  <input
-                    className="dp-check"
-                    type="checkbox"
-                    onChange={toggleSelectAllVisible}
-                    checked={filteredSortedRows.length > 0 && filteredSortedRows.every((r) => selectedIds.has(r.id))}
-                    aria-label="Select all visible"
-                  />
-                </th>
-                <th className="dp-th">Sl</th>
-                <th className="dp-th">Category</th>
-                <th className="dp-th">Brand</th>
-                <th className="dp-th">Product Name</th>
-                <th className="dp-th">B2C Price</th>
-                <th className="dp-th">B2C %</th>
-                <th className="dp-th">B2C Final</th>
-                <th className="dp-th">Stock</th>
-                <th className="dp-th">Image</th>
-                <th className="dp-th">Delete</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {filteredSortedRows.map((p, idx) => (
-                <tr key={p.id} className={selectedIds.has(p.id) ? 'dp-row-selected' : ''}>
-                  <td className="dp-td">
-                    <input className="dp-check" type="checkbox" checked={selectedIds.has(p.id)} onChange={() => toggleSelect(p.id)} />
-                  </td>
-                  <td className="dp-td">{idx + 1}</td>
-                  <td className="dp-td">{p.category}</td>
-                  <td className="dp-td">{p.brand}</td>
-                  <td className="dp-td">{p.product_name}</td>
-                  <td className="dp-td">{p.b2c_actual_price}</td>
-                  <td className="dp-td">{p.b2c_discount}</td>
-                  <td className="dp-td dp-strong">{computeFinal(p.b2c_actual_price, p.b2c_discount).toFixed(2)}</td>
-                  <td className="dp-td">{p.count}</td>
-                  <td className="dp-td">
-                    <div className="dp-imgbox">
-                      <img src={p.image_url} alt="product" className="dp-img" />
-                    </div>
-                  </td>
-                  <td className="dp-td">
-                    <button className="dp-del" onClick={() => askDelete([p.id])}>
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-
-              {!filteredSortedRows.length && (
-                <tr>
-                  <td colSpan="11" className="dp-empty">
-                    No products found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        <div className="dp2-meta">
+          <div className="pill">
+            <span className="k">Visible</span>
+            <span className="v">{filteredSortedRows.length}</span>
+          </div>
+          <div className={`pill ${selectedCount ? 'pill-accent' : ''}`}>
+            <span className="k">Selected</span>
+            <span className="v">{selectedCount}</span>
+          </div>
         </div>
       </div>
 
-      {popupMessage && <div className={`dp-toast ${popupType}`}>{popupMessage}</div>}
+      <div className="dp2-card">
+        {isLoading ? (
+          <div className="dp2-loading">
+            <div className="spinner" />
+            <div className="txt">Fetching products</div>
+          </div>
+        ) : filteredSortedRows.length === 0 ? (
+          <div className="dp2-empty">
+            <div className="ico" />
+            <h3>No products found</h3>
+            <p>Try clearing search or switching category filters.</p>
+          </div>
+        ) : (
+          <div className="dp2-table-wrap">
+            <table className="dp2-table">
+              <thead>
+                <tr>
+                  <th className="center w-check">
+                    <input
+                      className="dp2-check"
+                      type="checkbox"
+                      onChange={toggleSelectAllVisible}
+                      checked={allVisibleSelected}
+                      aria-label="Select all visible"
+                    />
+                  </th>
+                  <th className="w-sl">Sl</th>
+                  <th>Product</th>
+                  <th className="w-cat">Category</th>
+                  <th className="w-brand">Brand</th>
+                  <th className="ar w-price">B2C Final</th>
+                  <th className="ar w-stock">Stock</th>
+                  <th className="center w-action">Action</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredSortedRows.map((p, idx) => {
+                  const isSel = selectedIds.has(p.id)
+                  const final = computeFinal(p.b2c_actual_price, p.b2c_discount).toFixed(2)
+
+                  return (
+                    <tr key={p.id} className={isSel ? 'is-selected' : ''}>
+                      <td className="center">
+                        <input className="dp2-check" type="checkbox" checked={isSel} onChange={() => toggleSelect(p.id)} aria-label={`Select ${p.product_name}`} />
+                      </td>
+
+                      <td className="muted">{idx + 1}</td>
+
+                      <td>
+                        <div className="prodcell">
+                          <div className="thumb">{p.image_url ? <img src={p.image_url} alt={p.product_name} /> : <div className="ph" />}</div>
+                          <div className="meta">
+                            <div className="pname">{p.product_name || 'Product'}</div>
+                            <div className="psub muted">{p.brand || 'Brand'} · {p.category || 'Category'}</div>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="muted">{p.category || '-'}</td>
+                      <td className="muted">{p.brand || '-'}</td>
+
+                      <td className="ar">
+                        <span className="price">{final}</span>
+                      </td>
+
+                      <td className="ar">
+                        <span className={`stock ${coerceNumber(p.count) <= 0 ? 'low' : ''}`}>{coerceNumber(p.count)}</span>
+                      </td>
+
+                      <td className="center">
+                        <button className="dp2-btn dp2-btn-mini" onClick={() => askDelete([p.id])}>
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {popupMessage && <div className={`toast ${popupType}`}>{popupMessage}</div>}
 
       {showConfirm && (
-        <div className="dp-modal">
-          <div className="dp-modal-box">
-            <p className="dp-modal-title">{confirmIds.length > 1 ? `Delete ${confirmIds.length} products?` : 'Delete this product?'}</p>
-            <div className="dp-modal-actions">
-              <button className="dp-modal-btn primary" onClick={() => confirmDelete(true)}>
-                Yes
+        <div className="modal">
+          <div className="modal-box">
+            <p className="modal-title">{confirmIds.length > 1 ? `Delete ${confirmIds.length} products?` : 'Delete this product?'}</p>
+            <p className="modal-sub">This action cannot be undone.</p>
+            <div className="modal-actions">
+              <button className="dp2-btn dp2-btn-primary" onClick={() => confirmDelete(true)}>
+                Yes, delete
               </button>
-              <button className="dp-modal-btn" onClick={() => confirmDelete(false)}>
-                No
+              <button className="dp2-btn dp2-btn-ghost" onClick={() => confirmDelete(false)}>
+                Cancel
               </button>
             </div>
           </div>
