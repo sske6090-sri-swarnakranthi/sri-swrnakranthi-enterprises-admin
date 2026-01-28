@@ -1,6 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import './OrderDetailPopup.css'
-import { useAuth } from './AdminAuth'
 
 function safeUpper(s) {
   return String(s || '').toUpperCase()
@@ -34,12 +33,6 @@ function getContactText(sale) {
 }
 
 export default function OrderDetailPopup({ open, loading, detail, onClose, fmt }) {
-  const { token } = useAuth()
-
-  const authHeaders = useMemo(() => {
-    return token ? { Authorization: `Bearer ${token}` } : {}
-  }, [token])
-
   const [activeTab, setActiveTab] = useState('items')
 
   useEffect(() => {
