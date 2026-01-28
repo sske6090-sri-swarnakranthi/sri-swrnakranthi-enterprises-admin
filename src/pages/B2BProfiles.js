@@ -29,20 +29,20 @@ const B2BProfiles = () => {
   const [query, setQuery] = useState('')
   const popupRef = useRef(null)
 
-  const showToast = (msg, type = 'ok') => {
+  const showToast = useCallback((msg, type = 'ok') => {
     setToastType(type)
     setToast(msg)
     setTimeout(() => setToast(''), 2000)
-  }
+  }, [])
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setName('')
     setEmail('')
     setMobile('')
     setPassword('')
     setConfirmPassword('')
     setFormError('')
-  }
+  }, [])
 
   const loadCustomers = useCallback(async () => {
     setLoading(true)
@@ -240,11 +240,7 @@ const B2BProfiles = () => {
 
                 <div className="field">
                   <label>Mobile</label>
-                  <input
-                    value={mobile}
-                    onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                    placeholder="10-digit mobile"
-                  />
+                  <input value={mobile} onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="10-digit mobile" />
                 </div>
 
                 <div className="field">
