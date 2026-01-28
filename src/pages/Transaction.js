@@ -1,10 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import './Transaction.css'
-import NavbarAdmin from './NavbarAdmin';
+import NavbarAdmin from './NavbarAdmin'
 
-const API_BASE =
-  process.env.REACT_APP_API_BASE_URL ||
-  'https://taras-kart-backend.vercel.app/api'
+const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://taras-kart-backend.vercel.app/api'
 
 function asNum(v) {
   const n = Number(v)
@@ -42,22 +40,15 @@ function derivePaymentMeta(row) {
   const isFailed = paymentStatus === 'FAILED'
 
   let paymentType = isCOD ? 'COD' : 'PREPAID'
-
   if (!isCOD && isPaid && !paymentRef && paymentMethod === 'COD') paymentType = 'COD'
   if (!isCOD && isPaid && paymentRef) paymentType = 'PREPAID'
 
   let receivedFrom = paymentType === 'COD' ? 'Shiprocket' : 'Razorpay'
-
-  if (paymentType === 'PREPAID' && paymentMethod && paymentMethod !== 'RAZORPAY') {
-    receivedFrom = paymentMethod
-  }
+  if (paymentType === 'PREPAID' && paymentMethod && paymentMethod !== 'RAZORPAY') receivedFrom = paymentMethod
 
   let paymentReceived = false
-  if (paymentType === 'COD') {
-    paymentReceived = isPaid
-  } else {
-    paymentReceived = isPaid
-  }
+  if (paymentType === 'COD') paymentReceived = isPaid
+  else paymentReceived = isPaid
 
   let paymentState = 'PENDING'
   if (isFailed) paymentState = 'FAILED'
@@ -66,7 +57,6 @@ function derivePaymentMeta(row) {
   if (paymentType === 'COD' && paymentStatus === 'COD') paymentState = 'NOT_RECEIVED'
 
   const channel = source || 'WEB'
-
   return { paymentType, receivedFrom, paymentReceived, paymentState, channel }
 }
 
@@ -102,7 +92,7 @@ export default function Transaction() {
     localStorage.getItem('accessToken') ||
     ''
 
-  const fetchTx = async () => {
+  const fetchTx = useCallback(async () => {
     setLoading(true)
     setErr('')
     try {
@@ -111,7 +101,8 @@ export default function Transaction() {
           'Content-Type': 'application/json',
           Authorization: token ? `Bearer ${token}` : ''
         },
-        credentials: 'include'
+        credentials: 'include',
+        cache: 'no-store'
       })
       const data = await res.json().catch(() => null)
       if (!res.ok) {
@@ -127,15 +118,24 @@ export default function Transaction() {
       setErr('Failed to load transactions')
       setLoading(false)
     }
-  }
+  }, [token])
 
   useEffect(() => {
     fetchTx()
-  }, [])
+  }, [fetchTx])
 
   const enriched = useMemo(() => {
-    return (rows || []).map(r => {
-      const totals = typeof r.totals === 'string' ? (() => { try { return JSON.parse(r.totals) } catch { return null } })() : r.totals
+    return (rows || []).map((r) => {
+      const totals =
+        typeof r.totals === 'string'
+          ? (() => {
+              try {
+                return JSON.parse(r.totals)
+              } catch {
+                return null
+              }
+            })()
+          : r.totals
       const payable = totals?.payable != null ? asNum(totals.payable) : asNum(r.total)
       const meta = derivePaymentMeta(r)
       return {
@@ -154,13 +154,12 @@ export default function Transaction() {
   const chipFiltered = useMemo(() => {
     const list = enriched
     const chip = safeUpper(activeChip)
-
     if (chip === 'ALL') return list
-    if (chip === 'COD') return list.filter(x => x._paymentType === 'COD')
-    if (chip === 'PREPAID') return list.filter(x => x._paymentType === 'PREPAID')
-    if (chip === 'RECEIVED') return list.filter(x => x._paymentState === 'RECEIVED')
-    if (chip === 'PENDING') return list.filter(x => x._paymentState === 'PENDING' || x._paymentState === 'NOT_RECEIVED')
-    if (chip === 'CANCELLED') return list.filter(x => safeUpper(x.status) === 'CANCELLED')
+    if (chip === 'COD') return list.filter((x) => x._paymentType === 'COD')
+    if (chip === 'PREPAID') return list.filter((x) => x._paymentType === 'PREPAID')
+    if (chip === 'RECEIVED') return list.filter((x) => x._paymentState === 'RECEIVED')
+    if (chip === 'PENDING') return list.filter((x) => x._paymentState === 'PENDING' || x._paymentState === 'NOT_RECEIVED')
+    if (chip === 'CANCELLED') return list.filter((x) => safeUpper(x.status) === 'CANCELLED')
     return list
   }, [enriched, activeChip])
 
@@ -184,7 +183,7 @@ export default function Transaction() {
       if (!Number.isNaN(d.getTime())) toTs = d.getTime() + 24 * 60 * 60 * 1000 - 1
     }
 
-    return chipFiltered.filter(r => {
+    return chipFiltered.filter((r) => {
       const rowStatus = safeUpper(r.status)
       const rowEmail = safeUpper(r.customer_email)
       const rowName = safeUpper(r.customer_name)
@@ -195,11 +194,7 @@ export default function Transaction() {
       const rowPaymentState = safeUpper(r._paymentState)
 
       if (q) {
-        const hit =
-          rowEmail.includes(q) ||
-          rowName.includes(q) ||
-          rowMobile.includes(q) ||
-          rowId.includes(filters.q)
+        const hit = rowEmail.includes(q) || rowName.includes(q) || rowMobile.includes(q) || rowId.includes(filters.q)
         if (!hit) return false
       }
 
@@ -224,27 +219,16 @@ export default function Transaction() {
     const list = filtered
     const count = list.length
 
-    const cod = list.filter(x => x._paymentType === 'COD').length
-    const prepaid = list.filter(x => x._paymentType === 'PREPAID').length
-    const received = list.filter(x => x._paymentState === 'RECEIVED').length
-    const pending = list.filter(x => x._paymentState !== 'RECEIVED').length
-    const cancelled = list.filter(x => safeUpper(x.status) === 'CANCELLED').length
+    const cod = list.filter((x) => x._paymentType === 'COD').length
+    const prepaid = list.filter((x) => x._paymentType === 'PREPAID').length
+    const received = list.filter((x) => x._paymentState === 'RECEIVED').length
+    const pending = list.filter((x) => x._paymentState !== 'RECEIVED').length
+    const cancelled = list.filter((x) => safeUpper(x.status) === 'CANCELLED').length
 
     const totalAmount = list.reduce((a, x) => a + asNum(x._payable), 0)
-    const receivedAmount = list
-      .filter(x => x._paymentState === 'RECEIVED')
-      .reduce((a, x) => a + asNum(x._payable), 0)
+    const receivedAmount = list.filter((x) => x._paymentState === 'RECEIVED').reduce((a, x) => a + asNum(x._payable), 0)
 
-    return {
-      count,
-      cod,
-      prepaid,
-      received,
-      pending,
-      cancelled,
-      totalAmount,
-      receivedAmount
-    }
+    return { count, cod, prepaid, received, pending, cancelled, totalAmount, receivedAmount }
   }, [filtered])
 
   const onReset = () => {
@@ -268,8 +252,7 @@ export default function Transaction() {
       <div className="transaction-header">
         <h2>Transactions</h2>
         <p>
-          COD is counted as received only when payment status is PAID (Shiprocket remitted). Prepaid is
-          counted as received only when payment status is PAID (Razorpay captured).
+          COD is counted as received only when payment status is PAID (Shiprocket remitted). Prepaid is counted as received only when payment status is PAID (Razorpay captured).
         </p>
       </div>
 
@@ -297,13 +280,8 @@ export default function Transaction() {
       </div>
 
       <div className="chip-bar">
-        {['ALL', 'COD', 'PREPAID', 'RECEIVED', 'PENDING', 'CANCELLED'].map(c => (
-          <button
-            key={c}
-            className={`chip ${activeChip === c ? 'active' : ''}`}
-            onClick={() => setActiveChip(c)}
-            type="button"
-          >
+        {['ALL', 'COD', 'PREPAID', 'RECEIVED', 'PENDING', 'CANCELLED'].map((c) => (
+          <button key={c} className={`chip ${activeChip === c ? 'active' : ''}`} onClick={() => setActiveChip(c)} type="button">
             {c}
           </button>
         ))}
@@ -313,28 +291,11 @@ export default function Transaction() {
         <h3>Filters</h3>
 
         <div className="filter-grid">
-          <input
-            value={filters.q}
-            onChange={e => setFilters(s => ({ ...s, q: e.target.value }))}
-            placeholder="Search (name/email/mobile/order id)"
-          />
+          <input value={filters.q} onChange={(e) => setFilters((s) => ({ ...s, q: e.target.value }))} placeholder="Search (name/email/mobile/order id)" />
+          <input value={filters.email} onChange={(e) => setFilters((s) => ({ ...s, email: e.target.value }))} placeholder="Exact Email" />
+          <input value={filters.mobile} onChange={(e) => setFilters((s) => ({ ...s, mobile: e.target.value }))} placeholder="Exact Mobile" />
 
-          <input
-            value={filters.email}
-            onChange={e => setFilters(s => ({ ...s, email: e.target.value }))}
-            placeholder="Exact Email"
-          />
-
-          <input
-            value={filters.mobile}
-            onChange={e => setFilters(s => ({ ...s, mobile: e.target.value }))}
-            placeholder="Exact Mobile"
-          />
-
-          <select
-            value={filters.status}
-            onChange={e => setFilters(s => ({ ...s, status: e.target.value }))}
-          >
+          <select value={filters.status} onChange={(e) => setFilters((s) => ({ ...s, status: e.target.value }))}>
             <option value="">Order Status</option>
             <option value="PLACED">PLACED</option>
             <option value="CONFIRMED">CONFIRMED</option>
@@ -343,19 +304,13 @@ export default function Transaction() {
             <option value="RTO">RTO</option>
           </select>
 
-          <select
-            value={filters.paymentType}
-            onChange={e => setFilters(s => ({ ...s, paymentType: e.target.value }))}
-          >
+          <select value={filters.paymentType} onChange={(e) => setFilters((s) => ({ ...s, paymentType: e.target.value }))}>
             <option value="">Payment Type</option>
             <option value="COD">COD</option>
             <option value="PREPAID">PREPAID</option>
           </select>
 
-          <select
-            value={filters.paymentState}
-            onChange={e => setFilters(s => ({ ...s, paymentState: e.target.value }))}
-          >
+          <select value={filters.paymentState} onChange={(e) => setFilters((s) => ({ ...s, paymentState: e.target.value }))}>
             <option value="">Payment State</option>
             <option value="RECEIVED">RECEIVED</option>
             <option value="PENDING">PENDING</option>
@@ -363,26 +318,15 @@ export default function Transaction() {
             <option value="FAILED">FAILED</option>
           </select>
 
-          <select
-            value={filters.channel}
-            onChange={e => setFilters(s => ({ ...s, channel: e.target.value }))}
-          >
+          <select value={filters.channel} onChange={(e) => setFilters((s) => ({ ...s, channel: e.target.value }))}>
             <option value="">Channel</option>
             <option value="WEB">WEB</option>
             <option value="POS">POS</option>
             <option value="ADMIN">ADMIN</option>
           </select>
 
-          <input
-            type="date"
-            value={filters.dateFrom}
-            onChange={e => setFilters(s => ({ ...s, dateFrom: e.target.value }))}
-          />
-          <input
-            type="date"
-            value={filters.dateTo}
-            onChange={e => setFilters(s => ({ ...s, dateTo: e.target.value }))}
-          />
+          <input type="date" value={filters.dateFrom} onChange={(e) => setFilters((s) => ({ ...s, dateFrom: e.target.value }))} />
+          <input type="date" value={filters.dateTo} onChange={(e) => setFilters((s) => ({ ...s, dateTo: e.target.value }))} />
 
           <button type="button" onClick={fetchTx}>
             {loading ? 'Loading...' : 'Refresh'}
@@ -424,7 +368,7 @@ export default function Transaction() {
                   </td>
                 </tr>
               ) : (
-                filtered.map(r => {
+                filtered.map((r) => {
                   const orderShort = normStr(r.id).slice(0, 8)
                   const customer = normStr(r.customer_name) || 'Unknown'
                   const email = normStr(r.customer_email)
@@ -447,25 +391,17 @@ export default function Transaction() {
                       </td>
                       <td>₹ {money(amount)}</td>
                       <td>
-                        <span className={`status-pill ${statusPillClass(r._paymentType)}`}>
-                          {r._paymentType}
-                        </span>
+                        <span className={`status-pill ${statusPillClass(r._paymentType)}`}>{r._paymentType}</span>
                       </td>
                       <td>{r._receivedFrom}</td>
                       <td>
-                        <span className={`status-pill ${statusPillClass(r._paymentState)}`}>
-                          {r._paymentState}
-                        </span>
+                        <span className={`status-pill ${statusPillClass(r._paymentState)}`}>{r._paymentState}</span>
                       </td>
                       <td>
-                        <span className={`status-pill ${statusPillClass(orderStatus)}`}>
-                          {orderStatus}
-                        </span>
+                        <span className={`status-pill ${statusPillClass(orderStatus)}`}>{orderStatus}</span>
                       </td>
                       <td>
-                        <span className={`status-pill ${statusPillClass(paymentStatus)}`}>
-                          {paymentStatus}
-                        </span>
+                        <span className={`status-pill ${statusPillClass(paymentStatus)}`}>{paymentStatus}</span>
                       </td>
                     </tr>
                   )
