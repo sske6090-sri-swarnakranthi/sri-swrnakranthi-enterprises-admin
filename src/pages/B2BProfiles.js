@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react'
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import './B2BProfiles.css'
 
 const DEFAULT_API_BASE = 'http://localhost:5000'
@@ -23,7 +23,7 @@ const B2BProfiles = () => {
   const [confirmPassword, setConfirmPassword] = useState('')
 
   const [toast, setToast] = useState('')
-  const [toastType, setToastType] = useState('ok') // ok | err
+  const [toastType, setToastType] = useState('ok')
   const [formError, setFormError] = useState('')
 
   const [query, setQuery] = useState('')
@@ -44,7 +44,7 @@ const B2BProfiles = () => {
     setFormError('')
   }
 
-  const loadCustomers = async () => {
+  const loadCustomers = useCallback(async () => {
     setLoading(true)
     try {
       const res = await fetch(`${API_BASE}/api/user/b2b-customers`, { cache: 'no-store' })
@@ -55,11 +55,11 @@ const B2BProfiles = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     loadCustomers()
-  }, [])
+  }, [loadCustomers])
 
   const filteredCustomers = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -117,18 +117,21 @@ const B2BProfiles = () => {
     }
   }
 
-  const handleClickOutside = (e) => {
-    if (popupRef.current && !popupRef.current.contains(e.target)) {
-      setShowPopup(false)
-      resetForm()
-    }
-  }
+  const handleClickOutside = useCallback(
+    (e) => {
+      if (popupRef.current && !popupRef.current.contains(e.target)) {
+        setShowPopup(false)
+        resetForm()
+      }
+    },
+    [resetForm]
+  )
 
   useEffect(() => {
     if (showPopup) document.addEventListener('mousedown', handleClickOutside)
     else document.removeEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [showPopup])
+  }, [showPopup, handleClickOutside])
 
   return (
     <div className="b2b-wrap">

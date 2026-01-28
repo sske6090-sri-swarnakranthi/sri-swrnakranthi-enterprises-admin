@@ -16,7 +16,7 @@ import ReturnReview from './pages/ReturnReview'
 
 function RequireAuth({ children }) {
   const { token } = useAuth()
-  if (!token) return children
+  if (!token) return <Navigate to="/login" replace />
   return children
 }
 
@@ -27,16 +27,88 @@ export default function App() {
         <Router>
           <Routes>
             <Route path="/login" element={<LoginAdmin />} />
-            <Route path="/" element={<HomePage />} />
-            <Route path="/transactions" element={<Transaction />} />
-            <Route path="/stocks" element={<Stocks />} />
-            <Route path="/sales" element={<Sales />} />
-            <Route path="/customers" element={<Customers />} />
-            <Route path="/pos" element={<POS />} />
-            <Route path="/import" element={<ImportStock />} />
-            <Route path="/homepage-images" element={<AdminHomepageImages />} />
-            <Route path="/order-issues" element={<OrderIssues />} />
-            <Route path="/returns/:id" element={<ReturnReview />} />
+
+            <Route
+              path="/"
+              element={
+                <RequireAuth>
+                  <HomePage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/transactions"
+              element={
+                <RequireAuth>
+                  <Transaction />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/stocks"
+              element={
+                <RequireAuth>
+                  <Stocks />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/sales"
+              element={
+                <RequireAuth>
+                  <Sales />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/customers"
+              element={
+                <RequireAuth>
+                  <Customers />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/pos"
+              element={
+                <RequireAuth>
+                  <POS />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/import"
+              element={
+                <RequireAuth>
+                  <ImportStock />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/homepage-images"
+              element={
+                <RequireAuth>
+                  <AdminHomepageImages />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/order-issues"
+              element={
+                <RequireAuth>
+                  <OrderIssues />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/returns/:id"
+              element={
+                <RequireAuth>
+                  <ReturnReview />
+                </RequireAuth>
+              }
+            />
+
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>
