@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './Stocks.css'
 import Navbar from './NavbarAdmin'
 import { useAuth } from './AdminAuth'
@@ -8,7 +8,7 @@ const API_BASE_RAW =
   (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) ||
   (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_BASE) ||
   DEFAULT_API_BASE
-const API_BASE = API_BASE_RAW.replace(/\/+$/, '')
+const API_BASE = String(API_BASE_RAW || DEFAULT_API_BASE).replace(/\/+$/, '')
 
 const toArray = (x) => (Array.isArray(x) ? x : [])
 const num = (v) => {
@@ -28,6 +28,7 @@ const cf = (v) => {
 export default function Stocks() {
   const { user } = useAuth()
   const branchId = user?.branch_id
+
   const [raw, setRaw] = useState([])
   const [loading, setLoading] = useState(true)
   const [chip, setChip] = useState('All')
@@ -40,26 +41,29 @@ export default function Stocks() {
   const searchRef = useRef(null)
   const [csvUrl, setCsvUrl] = useState('')
 
-  const fetchStocks = async () => {
+  const fetchStocks = useCallback(async () => {
     if (!branchId) return
     setLoading(true)
     try {
       const token = localStorage.getItem('auth_token') || localStorage.getItem('admin_token') || ''
       const params = new URLSearchParams()
       if (gender !== 'ALL') params.set('gender', gender)
-      const res = await fetch(`${API_BASE}/api/branch/${encodeURIComponent(branchId)}/stock${params.toString() ? `?${params.toString()}` : ''}`, {
+
+      const url = `${API_BASE}/api/branch/${encodeURIComponent(branchId)}/stock${params.toString() ? `?${params.toString()}` : ''}`
+      const res = await fetch(url, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         credentials: 'omit',
-        mode: 'cors'
+        mode: 'cors',
+        cache: 'no-store'
       })
-      const data = res.ok ? await res.json() : []
+      const data = res.ok ? await res.json().catch(() => []) : []
       setRaw(toArray(data))
     } catch {
       setRaw([])
     } finally {
       setLoading(false)
     }
-  }
+  }, [branchId, gender])
 
   useEffect(() => {
     const g = localStorage.getItem('stocks_gender') || 'ALL'
@@ -68,20 +72,13 @@ export default function Stocks() {
 
   useEffect(() => {
     fetchStocks()
-  }, [branchId, gender])
-
-  useEffect(() => {
-    const h = setTimeout(() => {
-      fetchStocks()
-    }, 0)
-    return () => clearTimeout(h)
-  }, [])
+  }, [fetchStocks])
 
   const rows = useMemo(
     () =>
       toArray(raw).map((s, idx) => {
         const id = s.variant_id ?? idx + 1
-        const brand = safe(s.brand_name)
+        const brandName = safe(s.brand_name)
         const product = safe(s.product_name)
         const pattern = safe(s.pattern_code)
         const fit = safe(s.fit_type)
@@ -94,11 +91,13 @@ export default function Stocks() {
         const cost = num(s.cost_price)
         const quantity = num(s.on_hand)
         const reserved = num(s.reserved)
+
         let status = 'ok'
         if (quantity <= 0) status = 'out'
         else if (quantity <= lowThreshold) status = 'low'
         else if (quantity >= highThreshold) status = 'high'
-        return { id, brand, product, pattern, fit, mark, color, size, ean, mrp, sale, cost, quantity, reserved, status }
+
+        return { id, brand: brandName, product, pattern, fit, mark, color, size, ean, mrp, sale, cost, quantity, reserved, status }
       }),
     [raw, lowThreshold, highThreshold]
   )
@@ -120,12 +119,12 @@ export default function Stocks() {
     if (chip === 'High Stock') list = list.filter((r) => r.status === 'high')
     if (chip === 'Out of Stock') list = list.filter((r) => r.status === 'out')
     if (brand !== 'All') list = list.filter((r) => r.brand === brand)
+
     if (search.trim()) {
       const q = search.trim().toLowerCase()
-      list = list.filter((r) =>
-        [r.brand, r.product, r.pattern, r.fit, r.mark, r.color, r.size, r.ean].some((x) => x.toLowerCase().includes(q))
-      )
+      list = list.filter((r) => [r.brand, r.product, r.pattern, r.fit, r.mark, r.color, r.size, r.ean].some((x) => (x || '').toLowerCase().includes(q)))
     }
+
     const sorted = [...list]
     if (sortBy === 'recent') sorted.sort((a, b) => b.id - a.id)
     if (sortBy === 'qty_desc') sorted.sort((a, b) => b.quantity - a.quantity)
@@ -134,20 +133,24 @@ export default function Stocks() {
     if (sortBy === 'mrp_asc') sorted.sort((a, b) => a.mrp - b.mrp)
     if (sortBy === 'sale_desc') sorted.sort((a, b) => b.sale - a.sale)
     if (sortBy === 'sale_asc') sorted.sort((a, b) => a.sale - b.sale)
-    if (sortBy === 'brand_asc') sorted.sort((a, b) => a.brand.localeCompare(b.brand))
+    if (sortBy === 'brand_asc') sorted.sort((a, b) => (a.brand || '').localeCompare(b.brand || ''))
     return sorted
   }, [rows, chip, brand, search, sortBy])
 
   useEffect(() => {
     if (!filtered.length) {
-      setCsvUrl('')
+      setCsvUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev)
+        return ''
+      })
       return
     }
+
     const header = ['Sl. No,Status,Brand,Product,Pattern,Fit,Mark,Size,Colour,EAN,MRP,Sale Price,Cost Price,Qty,Reserved']
     const lines = filtered.map((s, i) =>
       [
         i + 1,
-        s.status.toUpperCase(),
+        String(s.status || '').toUpperCase(),
         `"${(s.brand || '').replace(/"/g, '""')}"`,
         `"${(s.product || '').replace(/"/g, '""')}"`,
         `"${(s.pattern || '').replace(/"/g, '""')}"`,
@@ -163,13 +166,19 @@ export default function Stocks() {
         s.reserved
       ].join(',')
     )
+
     const csv = [...header, ...lines].join('\n')
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
+
     setCsvUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev)
       return url
     })
+
+    return () => {
+      URL.revokeObjectURL(url)
+    }
   }, [filtered])
 
   const onGenderChange = (g) => {
@@ -188,18 +197,32 @@ export default function Stocks() {
       <div className="stocks-toolbar">
         <div className="bar-row">
           <div className="seg">
-            <button className={`seg-btn ${gender === 'ALL' ? 'active' : ''}`} onClick={() => onGenderChange('ALL')}>All</button>
-            <button className={`seg-btn ${gender === 'MEN' ? 'active' : ''}`} onClick={() => onGenderChange('MEN')}>Men</button>
-            <button className={`seg-btn ${gender === 'WOMEN' ? 'active' : ''}`} onClick={() => onGenderChange('WOMEN')}>Women</button>
-            <button className={`seg-btn ${gender === 'KIDS' ? 'active' : ''}`} onClick={() => onGenderChange('KIDS')}>Kids</button>
+            <button className={`seg-btn ${gender === 'ALL' ? 'active' : ''}`} onClick={() => onGenderChange('ALL')}>
+              All
+            </button>
+            <button className={`seg-btn ${gender === 'MEN' ? 'active' : ''}`} onClick={() => onGenderChange('MEN')}>
+              Men
+            </button>
+            <button className={`seg-btn ${gender === 'WOMEN' ? 'active' : ''}`} onClick={() => onGenderChange('WOMEN')}>
+              Women
+            </button>
+            <button className={`seg-btn ${gender === 'KIDS' ? 'active' : ''}`} onClick={() => onGenderChange('KIDS')}>
+              Kids
+            </button>
           </div>
           <div className="right-tools">
             {csvUrl ? (
-              <a className="export" href={csvUrl} download={`stock_${gender.toLowerCase()}.csv`}>Export CSV</a>
+              <a className="export" href={csvUrl} download={`stock_${String(gender || 'all').toLowerCase()}.csv`}>
+                Export CSV
+              </a>
             ) : (
-              <button className="export disabled" disabled>Export CSV</button>
+              <button className="export disabled" disabled>
+                Export CSV
+              </button>
             )}
-            <button className="refresh" onClick={fetchStocks}>{loading ? 'Loading...' : 'Refresh'}</button>
+            <button className="refresh" onClick={fetchStocks}>
+              {loading ? 'Loading...' : 'Refresh'}
+            </button>
           </div>
         </div>
 
@@ -243,7 +266,11 @@ export default function Stocks() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
-            {search && <button className="clear" onClick={clearSearch}>✕</button>}
+            {search && (
+              <button className="clear" onClick={clearSearch}>
+                ✕
+              </button>
+            )}
           </div>
           <select className="select" value={brand} onChange={(e) => setBrand(e.target.value)}>
             {brands.map((b) => (
@@ -331,21 +358,35 @@ export default function Stocks() {
               </thead>
               <tbody>
                 {filtered.map((s, index) => (
-                  <tr key={s.id} className={`row-${s.status}`}>
+                  <tr key={`${s.id}-${s.ean || index}`} className={`row-${s.status}`}>
                     <td className="mono">{index + 1}</td>
                     <td>
                       <span className={`status ${s.status}`}>
                         {s.status === 'out' ? 'Out' : s.status === 'low' ? 'Low' : s.status === 'high' ? 'High' : 'OK'}
                       </span>
                     </td>
-                    <td className="al truncate" title={s.brand}>{s.brand || '-'}</td>
-                    <td className="al truncate" title={s.product}>{s.product || '-'}</td>
-                    <td className="al truncate" title={s.pattern}>{s.pattern || '-'}</td>
-                    <td className="al truncate" title={s.fit}>{s.fit || '-'}</td>
-                    <td className="al truncate" title={s.mark}>{s.mark || '-'}</td>
+                    <td className="al truncate" title={s.brand}>
+                      {s.brand || '-'}
+                    </td>
+                    <td className="al truncate" title={s.product}>
+                      {s.product || '-'}
+                    </td>
+                    <td className="al truncate" title={s.pattern}>
+                      {s.pattern || '-'}
+                    </td>
+                    <td className="al truncate" title={s.fit}>
+                      {s.fit || '-'}
+                    </td>
+                    <td className="al truncate" title={s.mark}>
+                      {s.mark || '-'}
+                    </td>
                     <td className="mono">{s.size || '-'}</td>
-                    <td className="al truncate" title={s.color}>{s.color || '-'}</td>
-                    <td className="al mono truncate" title={s.ean}>{s.ean || '-'}</td>
+                    <td className="al truncate" title={s.color}>
+                      {s.color || '-'}
+                    </td>
+                    <td className="al mono truncate" title={s.ean}>
+                      {s.ean || '-'}
+                    </td>
                     <td className="ar">{cf(s.mrp)}</td>
                     <td className="ar">{cf(s.sale)}</td>
                     <td className="ar">{cf(s.cost)}</td>
@@ -355,7 +396,9 @@ export default function Stocks() {
                 ))}
                 {!filtered.length && (
                   <tr>
-                    <td colSpan="15" style={{ padding: 16, color: 'gold' }}>No matching records</td>
+                    <td colSpan="15" style={{ padding: 16, color: 'gold' }}>
+                      No matching records
+                    </td>
                   </tr>
                 )}
               </tbody>
